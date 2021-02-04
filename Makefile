@@ -4,7 +4,7 @@
 DOCKER       ?= docker
 GO           ?= go
 GOFMT        ?= $(GO)fmt
-APP          := __PROJECT__
+APP          := candlelight
 DOCKER_ORG   := xmidt
 
 VERSION ?= $(shell git describe --tag --always --dirty)
