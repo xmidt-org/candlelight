@@ -61,7 +61,6 @@ func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName 
 			logger.Log("message", "failed to create zipkin pipeline", "err", err)
 			return err
 		}
-
 	case jaegarName:
 		flush, err := jaeger.InstallNewPipeline(
 			jaeger.WithCollectorEndpoint(v.GetString(traceProviderEndpoint)),
