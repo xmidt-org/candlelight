@@ -73,6 +73,7 @@ func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName 
 		)
 		if err != nil {
 			logger.Log("message", "failed to create jaegar pipeline", "err", err)
+			return
 		}
 		defer flush()
 		break
