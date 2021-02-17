@@ -17,14 +17,46 @@
 package candlelight
 
 import (
+	"bytes"
+	"github.com/spf13/viper"
+	"github.com/xmidt-org/webpa-common/logging"
+	"go.opentelemetry.io/otel"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHelloWorld(t *testing.T) {
-	assert := assert.New(t)
+func TestConfigureTraceProviderStdOut(t *testing.T) {
+	var stdoutConfig = []byte(`type: stdout`)
+	var stdoutViper = viper.New()
+	stdoutViper.SetConfigType("yaml")
+	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
+	t.Log(stdoutViper.AllKeys())
+	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
+}
 
-	rv := HelloWorld()
-	assert.Nil(rv)
+func TestConfigureTraceProviderJaegar(t *testing.T) {
+	var jaegarConfig = []byte(`type: jaegar
+endpoint: http://localhost
+`)
+
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
+	t.Log(viper.AllKeys())
+	ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
+}
+
+func TestConfigureTraceProviderZipkin(t *testing.T) {
+	var zipkingConfig = []byte(`type: zipkin
+endpoint: http://127.0.0.1/
+`)
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
+	t.Log(viper.AllKeys())
+	ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
 }
