@@ -61,8 +61,8 @@ endpoint: http://127.0.0.1/
 
 
 func TestConfigureTracerProviderWhenViperIsNil(t *testing.T) {
-	ConfigureTracerProvider(nil, logging.DefaultLogger(), "stdOutTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
+	err := ConfigureTracerProvider(nil, logging.DefaultLogger(), "NilViperTestCase")
+	assert.NotNil(t, err)
 }
 
 func TestConfigureTraceProviderJaegarWhenEndpointIsNil(t *testing.T) {
@@ -71,8 +71,8 @@ func TestConfigureTraceProviderJaegarWhenEndpointIsNil(t *testing.T) {
 	var viper = viper.New()
 	viper.SetConfigType("yaml")
 	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
-	ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
+	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
+	assert.NotNil(t, err)
 }
 
 func TestConfigureTraceProviderZipkinWhenEndpointIsNil(t *testing.T) {
@@ -81,6 +81,17 @@ func TestConfigureTraceProviderZipkinWhenEndpointIsNil(t *testing.T) {
 	var viper = viper.New()
 	viper.SetConfigType("yaml")
 	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
-	ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
+	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
+	assert.NotNil(t, err)
+}
+
+func TestConfigureTraceProviderStdOutWithoutSkipTraceExport(t *testing.T) {
+	var stdoutConfig = []byte(`type: stdout
+`)
+	var stdoutViper = viper.New()
+	stdoutViper.SetConfigType("yaml")
+	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
+	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
 	assert.NotNil(t, otel.GetTracerProvider())
 }
+

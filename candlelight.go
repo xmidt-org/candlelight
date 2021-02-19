@@ -17,6 +17,7 @@
 package candlelight
 
 import (
+	"errors"
 	"github.com/go-kit/kit/log"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel"
@@ -41,10 +42,10 @@ const (
  2. supported traceProviders are zipkin,jaegar and stdout
  3. set skipTraceExport = true if you don't want to print the span and tracer information in stdout
 */
-func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName string) {
+func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName string) error {
 	// added  this condition if traceProvider  is missing in properties file then v will be coming as nil
 	if v == nil {
-		v = viper.New()
+		return  errors.New("viper instance can't be nil")
 	}
 	var traceProviderName = v.GetString(traceProviderType)
 
@@ -58,8 +59,9 @@ func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName 
 		)
 		if err != nil {
 			logger.Log("message", "failed to create zipkin pipeline", "err", err)
+			return err
 		}
-		break
+
 	case jaegarName:
 		flush, err := jaeger.InstallNewPipeline(
 			jaeger.WithCollectorEndpoint(v.GetString(traceProviderEndpoint)),
@@ -73,10 +75,9 @@ func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName 
 		)
 		if err != nil {
 			logger.Log("message", "failed to create jaegar pipeline", "err", err)
-			return
+			return err
 		}
 		defer flush()
-		break
 	default:
 		var skipTraceExport = v.GetBool(traceProviderSkipTraceExport)
 		var option stdout.Option
@@ -88,9 +89,10 @@ func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName 
 		otExporter, err := stdout.NewExporter(option)
 		if err != nil {
 			logger.Log("message", "failed to create stdout exporter", "err", err)
-			return
+			return err
 		}
 		traceProvider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(otExporter))
 		otel.SetTracerProvider(traceProvider)
 	}
+	return  nil
 }
