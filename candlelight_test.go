@@ -17,14 +17,81 @@
 package candlelight
 
 import (
+	"bytes"
+	"github.com/spf13/viper"
+	"github.com/xmidt-org/webpa-common/logging"
+	"go.opentelemetry.io/otel"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHelloWorld(t *testing.T) {
-	assert := assert.New(t)
-
-	rv := HelloWorld()
-	assert.Nil(rv)
+func TestConfigureTraceProviderStdOut(t *testing.T) {
+	var stdoutConfig = []byte(`type: stdout
+skipTraceExport: true
+`)
+	var stdoutViper = viper.New()
+	stdoutViper.SetConfigType("yaml")
+	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
+	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
 }
+
+func TestConfigureTraceProviderJaegar(t *testing.T) {
+	var jaegarConfig = []byte(`type: jaegar
+endpoint: http://localhost
+`)
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
+	ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
+}
+
+func TestConfigureTraceProviderZipkin(t *testing.T) {
+	var zipkingConfig = []byte(`type: zipkin
+endpoint: http://127.0.0.1/
+`)
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
+	ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
+}
+
+
+func TestConfigureTracerProviderWhenViperIsNil(t *testing.T) {
+	err := ConfigureTracerProvider(nil, logging.DefaultLogger(), "NilViperTestCase")
+	assert.NotNil(t, err)
+}
+
+func TestConfigureTraceProviderJaegarWhenEndpointIsNil(t *testing.T) {
+	var jaegarConfig = []byte(`type: jaegar
+`)
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
+	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
+	assert.NotNil(t, err)
+}
+
+func TestConfigureTraceProviderZipkinWhenEndpointIsNil(t *testing.T) {
+	var zipkingConfig = []byte(`type: zipkin
+`)
+	var viper = viper.New()
+	viper.SetConfigType("yaml")
+	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
+	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
+	assert.NotNil(t, err)
+}
+
+func TestConfigureTraceProviderStdOutWithoutSkipTraceExport(t *testing.T) {
+	var stdoutConfig = []byte(`type: stdout
+`)
+	var stdoutViper = viper.New()
+	stdoutViper.SetConfigType("yaml")
+	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
+	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
+	assert.NotNil(t, otel.GetTracerProvider())
+}
+
