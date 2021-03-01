@@ -17,36 +17,30 @@
 package candlelight
 
 import (
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 	"net/http"
 )
 
 const (
-	SpanIdHeader  = "X-B3-SpanId"
-	TraceIdHeader = "X-B3-TraceId"
+	DefaultSpanIDHeaderName  = "X-B3-SpanId"
+	DefaultTraceIDHeaderName = "X-B3-TraceId"
 )
 
-/**
-1. Acts as interceptor should be  the first point of interactions for all request's.
-2. Will  be responsible for starting a new span with existing traceId if present in request header as traceparent else it will  generate new trace id.
-	  example of traceparent will be version[2]-traceId[32]-spanId[16]-traceFlags[2] is mandatory for continuing existing traces and tracestate is optional.
-3. Will be writing the traceId and spanId in response headers for easier debugging in case of any incident.
-4. will be adding the newly created span in the request context so that we can use it other places.
-*/
-
-func TraceMiddleware(delegate http.Handler) http.Handler {
+// Acts as interceptor should be  the first point of interactions for all request's.
+// Will  be responsible for starting a new span with existing traceId if present in request header as traceparent else it will  generate new trace id.
+//	  example of traceparent will be version[2]-traceId[32]-spanId[16]-traceFlags[2] is mandatory for continuing existing traces and tracestate is optional.
+// Will be writing the traceId and spanId in response headers for easier debugging in case of any incident.
+// will be adding the newly created span in the request context so that we can use it other places.
+func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Handler {
+	spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(traceConfig.config)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var span trace.Span
-		ctx := r.Context()
 		prop := propagation.TraceContext{}
-		ctx = prop.Extract(ctx, r.Header)
-		tracer := otel.GetTracerProvider().Tracer(r.URL.Path)
-		ctx, span = tracer.Start(ctx, r.URL.Path)
+		ctx := prop.Extract(r.Context(), r.Header)
+		tracer := traceConfig.traceProvider.Tracer(r.URL.Path)
+		ctx, span := tracer.Start(ctx, r.URL.Path)
 		defer span.End()
-		w.Header().Set(SpanIdHeader, span.SpanContext().SpanID.String())
-		w.Header().Set(TraceIdHeader, span.SpanContext().TraceID.String())
+		w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID.String())
+		w.Header().Set(traceIDHeaderName, span.SpanContext().TraceID.String())
 		delegate.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

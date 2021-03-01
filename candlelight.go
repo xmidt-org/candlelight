@@ -17,82 +17,82 @@
 package candlelight
 
 import (
-	"errors"
-	"github.com/go-kit/kit/log"
-	"github.com/spf13/viper"
-	"go.opentelemetry.io/otel"
+	"fmt"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
 	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
+	"strings"
 )
 
-const (
-	zipkinName                   = "zipkin"
-	jaegarName                   = "jaegar"
-	traceProviderType            = "type"
-	traceProviderEndpoint        = "endpoint"
-	traceProviderSkipTraceExport = "skipTraceExport"
+var (
+	nilProviderErr = fmt.Errorf("No provider is configured")
 )
 
-/***
- 1. will be responsible for creating the traceprovider and setting it back to  opentelemetry
-		viper will be having all the fields like  type,endpoint and skipTraceExport
- 2. supported traceProviders are zipkin,jaegar and stdout
- 3. set skipTraceExport = true if you don't want to print the span and tracer information in stdout
-*/
-func ConfigureTracerProvider(v *viper.Viper, logger log.Logger, applicationName string) error {
-	// added  this condition if traceProvider  is missing in properties file then v will be coming as nil
-	if v == nil {
-		return  errors.New("viper instance can't be nil")
-
+// This function is responsible for creating the traceProvider
+// Will be creating the traceProvider based on the config.Provider
+func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
+	if len(config.Provider) == 0 {
+		return nil, nilProviderErr
 	}
-	var traceProviderName = v.GetString(traceProviderType)
+	// Handling camelcase of provider.
+	config.Provider = strings.ToLower(config.Provider)
+	providerConfig := providersConfig[config.Provider]
+	if providerConfig == nil {
+		providerConfig = config.Providers[config.Provider]
+	}
+	if providerConfig == nil {
+		return nil, nilProviderErr
+	}
+	provider, err := providerConfig(config)
+	if err != nil {
+		return nil, err
+	}
+	return provider, nil
+}
 
-	switch traceProviderName {
+type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 
-	case zipkinName:
-		err := zipkin.InstallNewPipeline(
-			v.GetString(traceProviderEndpoint),
-			applicationName,
-			zipkin.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
-		)
-		if err != nil {
-			logger.Log("message", "failed to create zipkin pipeline", "err", err)
-			return err
-		}
-	case jaegarName:
-		flush, err := jaeger.InstallNewPipeline(
-			jaeger.WithCollectorEndpoint(v.GetString(traceProviderEndpoint)),
+// Created pre-defined immutable map of built-in provider's
+var providersConfig = map[string]ProviderConstructor{
+	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
+		traceProvider, flushFn, err := jaeger.NewExportPipeline(
+			jaeger.WithCollectorEndpoint(cfg.Endpoint),
 			jaeger.WithProcess(jaeger.Process{
-				ServiceName: applicationName,
+				ServiceName: cfg.ApplicationName,
 				Tags: []label.KeyValue{
-					label.String("exporter", jaegarName),
+					label.String("exporter", cfg.Provider),
 				},
 			}),
 			jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
 		)
 		if err != nil {
-			logger.Log("message", "failed to create jaegar pipeline", "err", err)
-			return err
+			return nil, err
 		}
-		defer flush()
-	default:
-		var skipTraceExport = v.GetBool(traceProviderSkipTraceExport)
+		defer flushFn()
+		return traceProvider, nil
+	},
+	"zipkin": func(cfg Config) (trace.TracerProvider, error) {
+		traceProvider, err := zipkin.NewExportPipeline(cfg.Endpoint,
+			cfg.ApplicationName,
+			zipkin.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
+		)
+		return traceProvider, err
+	},
+	"stdout": func(cfg Config) (trace.TracerProvider, error) {
 		var option stdout.Option
-		if skipTraceExport {
+		if cfg.SkipTraceExport {
 			option = stdout.WithoutTraceExport()
 		} else {
 			option = stdout.WithPrettyPrint()
 		}
 		otExporter, err := stdout.NewExporter(option)
 		if err != nil {
-			logger.Log("message", "failed to create stdout exporter", "err", err)
-			return
+			return nil, err
 		}
 		traceProvider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(otExporter))
-		otel.SetTracerProvider(traceProvider)
-	}
-	return  nil
+		return traceProvider, nil
+	},
 }

@@ -17,81 +17,77 @@
 package candlelight
 
 import (
-	"bytes"
-	"github.com/spf13/viper"
-	"github.com/xmidt-org/webpa-common/logging"
-	"go.opentelemetry.io/otel"
-	"testing"
-
+	"errors"
 	"github.com/stretchr/testify/assert"
+	"strconv"
+	"testing"
 )
 
-func TestConfigureTraceProviderStdOut(t *testing.T) {
-	var stdoutConfig = []byte(`type: stdout
-skipTraceExport: true
-`)
-	var stdoutViper = viper.New()
-	stdoutViper.SetConfigType("yaml")
-	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
-	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
+func TestConfigureTracerProvider(t *testing.T) {
+
+	testData := []struct {
+		config Config
+		err    error
+	}{
+		{
+			config: Config{
+				Provider: "jaeger",
+			},
+			err: errors.New("collectorEndpoint must not be empty"),
+		},
+		{
+			config: Config{
+				Provider: "jaeger",
+				Endpoint: "http://localhost",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider: "Zipkin",
+				Endpoint: "http://localhost",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider: "Zipkin",
+			},
+			err: errors.New("collector URL cannot be empty"),
+		},
+		{
+			config: Config{
+				Provider: "undefined",
+			},
+			err: nilProviderErr,
+		},
+		{
+			config: Config{
+				Provider: "stdOut",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider:        "stdoUt",
+				SkipTraceExport: true,
+			},
+			err: nil,
+		},
+		{
+			config: Config{},
+			err:    nilProviderErr,
+		},
+	}
+	for i, record := range testData {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			var (
+				assert = assert.New(t)
+				_, err = ConfigureTracerProvider(record.config)
+			)
+			assert.Equal(record.err, err)
+
+		})
+	}
+
 }
-
-func TestConfigureTraceProviderJaegar(t *testing.T) {
-	var jaegarConfig = []byte(`type: jaegar
-endpoint: http://localhost
-`)
-	var viper = viper.New()
-	viper.SetConfigType("yaml")
-	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
-	ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
-}
-
-func TestConfigureTraceProviderZipkin(t *testing.T) {
-	var zipkingConfig = []byte(`type: zipkin
-endpoint: http://127.0.0.1/
-`)
-	var viper = viper.New()
-	viper.SetConfigType("yaml")
-	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
-	ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
-}
-
-
-func TestConfigureTracerProviderWhenViperIsNil(t *testing.T) {
-	err := ConfigureTracerProvider(nil, logging.DefaultLogger(), "NilViperTestCase")
-	assert.NotNil(t, err)
-}
-
-func TestConfigureTraceProviderJaegarWhenEndpointIsNil(t *testing.T) {
-	var jaegarConfig = []byte(`type: jaegar
-`)
-	var viper = viper.New()
-	viper.SetConfigType("yaml")
-	viper.ReadConfig(bytes.NewBuffer(jaegarConfig))
-	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "jaegarTestCase")
-	assert.NotNil(t, err)
-}
-
-func TestConfigureTraceProviderZipkinWhenEndpointIsNil(t *testing.T) {
-	var zipkingConfig = []byte(`type: zipkin
-`)
-	var viper = viper.New()
-	viper.SetConfigType("yaml")
-	viper.ReadConfig(bytes.NewBuffer(zipkingConfig))
-	err := ConfigureTracerProvider(viper, logging.DefaultLogger(), "ZipkinTestCase")
-	assert.NotNil(t, err)
-}
-
-func TestConfigureTraceProviderStdOutWithoutSkipTraceExport(t *testing.T) {
-	var stdoutConfig = []byte(`type: stdout
-`)
-	var stdoutViper = viper.New()
-	stdoutViper.SetConfigType("yaml")
-	stdoutViper.ReadConfig(bytes.NewBuffer(stdoutConfig))
-	ConfigureTracerProvider(stdoutViper, logging.DefaultLogger(), "stdOutTestCase")
-	assert.NotNil(t, otel.GetTracerProvider())
-}
-

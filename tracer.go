@@ -24,22 +24,19 @@ import (
 	"net/http"
 )
 
-/**
-Will be injecting the trace id and span id  in the logger.
-*/
-func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
+// Will be injecting the trace id and span id  in the logger.
+func InjectTraceInformationInLogger(config Config) logginghttp.LoggerFunc {
 	return func(kv []interface{}, request *http.Request) []interface{} {
 		traceId, spanId := ExtractTraceInformation(request.Context())
-		return append(kv, SpanIdHeader, spanId, TraceIdHeader, traceId)
+		spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(config)
+		return append(kv, spanIDHeaderName, spanId, traceIDHeaderName, traceId)
 	}
 }
 
-/**
-	Will be extracting the traceId and spanId
-	if  span is not started in middleware then it will be returning noopSpan
-	which will result traceId[32 digits] and spanId[16 digits] as 0
-	i.e. 00000000000000000000000000000000 and 0000000000000000
-*/
+// Will be extracting the traceId and spanId  if  span is not started in middleware then it will be
+// returning noopSpan which will result traceId[32 digits] and spanId[16 digits] as 0
+// i.e. 00000000000000000000000000000000 and 0000000000000000
+
 func ExtractTraceInformation(ctx context.Context) (string, string) {
 	span := trace.SpanFromContext(ctx)
 	traceId := span.SpanContext().TraceID.String()
@@ -47,12 +44,25 @@ func ExtractTraceInformation(ctx context.Context) (string, string) {
 	return traceId, spanId
 }
 
-/**
-	Will be injecting  traceParent and tracestate headers in carrier
-	from span which is available in context.
-*/
+//	Will be injecting  traceParent and tracestate headers in carrier
+//	from span which is available in context.
+
 func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
 	prop.Inject(ctx, carrier)
 
+}
+
+// Will be responsible for  providing the  SpanIDHeaderName and TraceIdHeaderName
+// if they are provided will be used else defaults will be used.
+func ExtractSpanIDAndTraceIDHeaderName(config Config) (string, string) {
+	spanIDHeaderName := config.SpanIDHeaderName
+	if len(spanIDHeaderName) == 0 {
+		spanIDHeaderName = DefaultSpanIDHeaderName
+	}
+	traceIDHeaderName := config.TraceIDHeaderName
+	if len(traceIDHeaderName) == 0 {
+		traceIDHeaderName = DefaultTraceIDHeaderName
+	}
+	return spanIDHeaderName, traceIDHeaderName
 }
