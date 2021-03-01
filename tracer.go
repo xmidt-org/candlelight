@@ -49,7 +49,7 @@ func ExtractTraceInformation(ctx context.Context) (string, string) {
 
 /**
 	Will be injecting  traceParent and tracestate headers in carrier
-	from span which is avaliable in context.
+	from span which is available in context.
 */
 func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
