@@ -18,36 +18,40 @@ package candlelight
 
 import "go.opentelemetry.io/otel/trace"
 
-// Config object for otel tracing
+// Config specifies parameters relevant for otel trace provider.
 type Config struct {
-	// ApplicationName is the name for this application
+	// ApplicationName is the name for this application.
 	ApplicationName string `json:"applicationName"`
 
-	// Provider is the name of the trace provider to use
+	// Provider is the name of the trace provider to use.
 	Provider string `json:"provider"`
 
-	// Endpoint is the endpoint to which spans needs to be submitted.
+	// Endpoint is the endpoint to which spans need to be submitted.
 	Endpoint string `json:"endpoint"`
 
-	// SkipTraceExport works only in case of provider stdout
-	// set SkipTraceExport = true if you don't want to print the span and tracer information in stdout
+	// SkipTraceExport works only in case of provider stdout. Set
+	// SkipTraceExport = true if you don't want to print the span
+	// and tracer information in stdout.
 	SkipTraceExport bool `json:"skipTraceExport"`
 
-	// In case of any custom provider which client want to use its own.
+	// Providers are useful when client wants to add their own custom
+	// TracerProvider.
 	Providers map[string]ProviderConstructor `json:"-"`
+}
 
-	// In case User wants to use his own  headers in response and logs.
-	SpanIDHeaderName  string `json:"spanIDHeaderName"`
+// HeaderConfig specifies relevant header parameters.
+type HeaderConfig struct {
+
+	// SpanIDHeaderName is used to set custom header in response and logs.
+	SpanIDHeaderName string `json:"spanIDHeaderName"`
+
+	// TraceIDHeaderName is used to set custom header in response and logs.
 	TraceIDHeaderName string `json:"traceIDHeaderName"`
 }
 
-// TraceConfig  which will have Config and trace provider created by ConfigureTraceProvider.
+// TraceConfig will be used in TraceMiddleware to use config and TraceProvider
+// objects created by ConfigureTracerProvider.
 type TraceConfig struct {
-	config        Config
-	traceProvider trace.TracerProvider
-}
-
-// Constructor for TraceConfig object
-func NewTraceConfig(config Config, traceProvider trace.TracerProvider) TraceConfig {
-	return TraceConfig{config, traceProvider}
+	HeaderConfig  HeaderConfig
+	TraceProvider trace.TracerProvider
 }

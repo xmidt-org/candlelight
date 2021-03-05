@@ -26,17 +26,18 @@ const (
 	DefaultTraceIDHeaderName = "X-B3-TraceId"
 )
 
-// Acts as interceptor should be  the first point of interactions for all request's.
-// Will  be responsible for starting a new span with existing traceId if present in request header as traceparent else it will  generate new trace id.
-//	  example of traceparent will be version[2]-traceId[32]-spanId[16]-traceFlags[2] is mandatory for continuing existing traces and tracestate is optional.
-// Will be writing the traceId and spanId in response headers for easier debugging in case of any incident.
-// will be adding the newly created span in the request context so that we can use it other places.
+// TraceMiddleware acts as interceptor that is the first point of interaction
+// for all requests. It will be responsible for starting a new span with existing
+// traceId if present in the request header as traceparent. Otherwise it will
+// generate new trace id. Example of traceparent will be
+// version[2]-traceId[32]-spanId[16]-traceFlags[2]. It is mandatory for continuing
+// existing traces while tracestate is optional.
 func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Handler {
-	spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(traceConfig.config)
+	spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(traceConfig.HeaderConfig)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
 		ctx := prop.Extract(r.Context(), r.Header)
-		tracer := traceConfig.traceProvider.Tracer(r.URL.Path)
+		tracer := traceConfig.TraceProvider.Tracer(r.URL.Path)
 		ctx, span := tracer.Start(ctx, r.URL.Path)
 		defer span.End()
 		w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID.String())

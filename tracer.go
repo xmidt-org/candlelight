@@ -24,43 +24,43 @@ import (
 	"net/http"
 )
 
-// Will be injecting the trace id and span id  in the logger.
-func InjectTraceInformationInLogger(config Config) logginghttp.LoggerFunc {
+// InjectTraceInformationInLogger adds the traceID and spanID to
+// key value pairs that can be provided to a logger.
+func InjectTraceInformationInLogger(headerConfig HeaderConfig) logginghttp.LoggerFunc {
 	return func(kv []interface{}, request *http.Request) []interface{} {
-		traceId, spanId := ExtractTraceInformation(request.Context())
-		spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(config)
-		return append(kv, spanIDHeaderName, spanId, traceIDHeaderName, traceId)
+		traceID, spanID := ExtractTraceInformation(request.Context())
+		spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(headerConfig)
+		return append(kv, spanIDHeaderName, spanID, traceIDHeaderName, traceID)
 	}
 }
 
-// Will be extracting the traceId and spanId  if  span is not started in middleware then it will be
-// returning noopSpan which will result traceId[32 digits] and spanId[16 digits] as 0
-// i.e. 00000000000000000000000000000000 and 0000000000000000
-
+// ExtractTraceInformation will be extracting the traceID and spanID. If span
+// is not started in middleware, then it will be returning noopSpan which will
+// have traceID[32 digits] and spanID[16 digits] having all 0's i.e.
+// 00000000000000000000000000000000 and 0000000000000000 respectively.
 func ExtractTraceInformation(ctx context.Context) (string, string) {
 	span := trace.SpanFromContext(ctx)
-	traceId := span.SpanContext().TraceID.String()
-	spanId := span.SpanContext().SpanID.String()
-	return traceId, spanId
+	traceID := span.SpanContext().TraceID.String()
+	spanID := span.SpanContext().SpanID.String()
+	return traceID, spanID
 }
 
-//	Will be injecting  traceParent and tracestate headers in carrier
-//	from span which is available in context.
-
+// InjectTraceInformation will be injecting traceParent and tracestate as
+// headers in carrier from span which is available in context.
 func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
 	prop.Inject(ctx, carrier)
-
 }
 
-// Will be responsible for  providing the  SpanIDHeaderName and TraceIdHeaderName
-// if they are provided will be used else defaults will be used.
-func ExtractSpanIDAndTraceIDHeaderName(config Config) (string, string) {
-	spanIDHeaderName := config.SpanIDHeaderName
+// ExtractSpanIDAndTraceIDHeaderName will be responsible for providing the
+// SpanIDHeaderName and TraceIdHeaderName if they are provided, otherwise
+// defaults will be used.
+func ExtractSpanIDAndTraceIDHeaderName(headerConfig HeaderConfig) (string, string) {
+	spanIDHeaderName := headerConfig.SpanIDHeaderName
 	if len(spanIDHeaderName) == 0 {
 		spanIDHeaderName = DefaultSpanIDHeaderName
 	}
-	traceIDHeaderName := config.TraceIDHeaderName
+	traceIDHeaderName := headerConfig.TraceIDHeaderName
 	if len(traceIDHeaderName) == 0 {
 		traceIDHeaderName = DefaultTraceIDHeaderName
 	}

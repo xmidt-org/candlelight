@@ -31,8 +31,10 @@ var (
 	nilProviderErr = fmt.Errorf("No provider is configured")
 )
 
-// This function is responsible for creating the traceProvider
-// Will be creating the traceProvider based on the config.Provider
+// ConfigureTracerProvider creates the TracerProvider based on the configuration
+// provided. It has built-in support for jaeger, zipkin, and stdout providers.
+// A different provider can be used if a constructor for it is provided in the
+// config.
 func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	if len(config.Provider) == 0 {
 		return nil, nilProviderErr
@@ -53,12 +55,14 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	return provider, nil
 }
 
+// ProviderConstructor is useful when client wants to add their own custom
+// TracerProvider.
 type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
 	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
-		traceProvider, flushFn, err := jaeger.NewExportPipeline(
+		traceProvider, _, err := jaeger.NewExportPipeline(
 			jaeger.WithCollectorEndpoint(cfg.Endpoint),
 			jaeger.WithProcess(jaeger.Process{
 				ServiceName: cfg.ApplicationName,
@@ -71,7 +75,6 @@ var providersConfig = map[string]ProviderConstructor{
 		if err != nil {
 			return nil, err
 		}
-		defer flushFn()
 		return traceProvider, nil
 	},
 	"zipkin": func(cfg Config) (trace.TracerProvider, error) {

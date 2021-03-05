@@ -3,7 +3,6 @@ package candlelight
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
-	"go.opentelemetry.io/otel/trace"
 	"net/http"
 	"strconv"
 	"testing"
@@ -23,13 +22,13 @@ func TestInjectTraceInformation(t *testing.T) {
 
 func TestExtractSpanIDAndTraceIDHeaderName(t *testing.T) {
 	testData := []struct {
-		config            Config
+		headerConfig      HeaderConfig
 		spanIDHeaderName  string
 		traceIDHeaderName string
 	}{
-		{Config{}, DefaultSpanIDHeaderName, DefaultTraceIDHeaderName},
+		{HeaderConfig{}, DefaultSpanIDHeaderName, DefaultTraceIDHeaderName},
 		{
-			config: Config{
+			headerConfig: HeaderConfig{
 				SpanIDHeaderName:  "SpanID",
 				TraceIDHeaderName: "TraceId",
 			},
@@ -42,30 +41,10 @@ func TestExtractSpanIDAndTraceIDHeaderName(t *testing.T) {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			var (
 				assert                              = assert.New(t)
-				spanIDHeaderName, traceIDHeaderName = ExtractSpanIDAndTraceIDHeaderName(record.config)
+				spanIDHeaderName, traceIDHeaderName = ExtractSpanIDAndTraceIDHeaderName(record.headerConfig)
 			)
 			assert.Equal(record.spanIDHeaderName, spanIDHeaderName)
 			assert.Equal(record.traceIDHeaderName, traceIDHeaderName)
 		})
 	}
-}
-
-func TestNewTraceConfig(t *testing.T) {
-	testData := []struct {
-		config        Config
-		traceProvider trace.TracerProvider
-		traceConfig   TraceConfig
-	}{
-		{Config{}, nil, NewTraceConfig(Config{}, nil)},
-	}
-	for i, record := range testData {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-				output = NewTraceConfig(record.config, record.traceProvider)
-			)
-			assert.Equal(record.traceConfig, output)
-		})
-	}
-
 }
