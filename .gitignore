@@ -21,3 +21,6 @@ report.json
 
 # Vim
 *.swp
+
+#Intellij
+.idea

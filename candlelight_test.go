@@ -17,14 +17,77 @@
 package candlelight
 
 import (
-	"testing"
-
+	"errors"
 	"github.com/stretchr/testify/assert"
+	"strconv"
+	"testing"
 )
 
-func TestHelloWorld(t *testing.T) {
-	assert := assert.New(t)
+func TestConfigureTracerProvider(t *testing.T) {
 
-	rv := HelloWorld()
-	assert.Nil(rv)
+	testData := []struct {
+		config Config
+		err    error
+	}{
+		{
+			config: Config{
+				Provider: "jaeger",
+			},
+			err: errors.New("collectorEndpoint must not be empty"),
+		},
+		{
+			config: Config{
+				Provider: "jaeger",
+				Endpoint: "http://localhost",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider: "Zipkin",
+				Endpoint: "http://localhost",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider: "Zipkin",
+			},
+			err: errors.New("collector URL cannot be empty"),
+		},
+		{
+			config: Config{
+				Provider: "undefined",
+			},
+			err: nilProviderErr,
+		},
+		{
+			config: Config{
+				Provider: "stdOut",
+			},
+			err: nil,
+		},
+		{
+			config: Config{
+				Provider:        "stdoUt",
+				SkipTraceExport: true,
+			},
+			err: nil,
+		},
+		{
+			config: Config{},
+			err:    nilProviderErr,
+		},
+	}
+	for i, record := range testData {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			var (
+				assert = assert.New(t)
+				_, err = ConfigureTracerProvider(record.config)
+			)
+			assert.Equal(record.err, err)
+
+		})
+	}
+
 }
