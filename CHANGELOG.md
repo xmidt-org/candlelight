@@ -6,9 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v0.0.2]
+- Added setup and middleware for application tracing using opentelemetry. [#16](https://github.com/xmidt-org/candlelight/pull/16) thanks to @Sachin4403
+
 ## [v0.0.1]
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.1..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.2..HEAD
+[v0.0.2]: https://github.com/xmidt-org/candlelight/compare/v0.0.1..v0.0.2
 [v0.0.1]: https://github.com/xmidt-org/candlelight/compare/v0.0.0..v0.0.1
