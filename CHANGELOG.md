@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Add struct to unmarshal tracing info. [#19](https://github.com/xmidt-org/candlelight/pull/19) thanks to @Sachin4403
+
 
 ## [v0.0.2]
 - Added setup and middleware for application tracing using opentelemetry. [#16](https://github.com/xmidt-org/candlelight/pull/16) thanks to @Sachin4403
