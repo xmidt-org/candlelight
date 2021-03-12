@@ -59,7 +59,7 @@ type TraceConfig struct {
 // TracingConfig represents a component for tracing. It will be used to unmarshal
 // the configuration provided in application.yaml file.
 type TracingConfig struct {
-	// Provider describe the configuration for this application..
+	// Provider describe the configuration for this application.
 	Provider Config
 	// Headers  is the header name  configuration for this application.
 	Headers HeaderConfig
