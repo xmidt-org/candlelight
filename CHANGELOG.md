@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - Add struct to unmarshal tracing info. [#19](https://github.com/xmidt-org/candlelight/pull/19) thanks to @Sachin4403
-
+- We will be using defaults fields in logs and http Response.  [#22](https://github.com/xmidt-org/candlelight/pull/22) thanks to @Sachin4403
 ### Fixed
 - TraceMiddleware was adding TraceID and SpanID to the response due to which we were seeing same traceID and multiple spanID in response, Now it will be adding the TraceID and SpanID only when the remote span is not present in context. [#21](https://github.com/xmidt-org/candlelight/pull/21) thanks to @Sachin4403
 
