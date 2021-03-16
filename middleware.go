@@ -23,8 +23,10 @@ import (
 )
 
 const (
-	DefaultSpanIDHeaderName  = "X-B3-SpanId"
-	DefaultTraceIDHeaderName = "X-B3-TraceId"
+	spanIDHeaderName  = "X-Midt-Span-ID"
+	traceIDHeaderName = "X-Midt-Trace-ID"
+	SpanIDLogKeyName  = "span-id"
+	TraceIdLogKeyName = "trace-id"
 )
 
 // TraceMiddleware acts as interceptor that is the first point of interaction
@@ -34,7 +36,6 @@ const (
 // version[2]-traceId[32]-spanId[16]-traceFlags[2]. It is mandatory for continuing
 // existing traces while tracestate is optional.
 func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Handler {
-	spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(traceConfig.HeaderConfig)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
 		ctx := prop.Extract(r.Context(), r.Header)

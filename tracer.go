@@ -26,11 +26,10 @@ import (
 
 // InjectTraceInformationInLogger adds the traceID and spanID to
 // key value pairs that can be provided to a logger.
-func InjectTraceInformationInLogger(headerConfig HeaderConfig) logginghttp.LoggerFunc {
+func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
 	return func(kv []interface{}, request *http.Request) []interface{} {
 		traceID, spanID := ExtractTraceInformation(request.Context())
-		spanIDHeaderName, traceIDHeaderName := ExtractSpanIDAndTraceIDHeaderName(headerConfig)
-		return append(kv, spanIDHeaderName, spanID, traceIDHeaderName, traceID)
+		return append(kv, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID)
 	}
 }
 
@@ -50,19 +49,4 @@ func ExtractTraceInformation(ctx context.Context) (string, string) {
 func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
 	prop.Inject(ctx, carrier)
-}
-
-// ExtractSpanIDAndTraceIDHeaderName will be responsible for providing the
-// SpanIDHeaderName and TraceIdHeaderName if they are provided, otherwise
-// defaults will be used.
-func ExtractSpanIDAndTraceIDHeaderName(headerConfig HeaderConfig) (string, string) {
-	spanIDHeaderName := headerConfig.SpanIDHeaderName
-	if len(spanIDHeaderName) == 0 {
-		spanIDHeaderName = DefaultSpanIDHeaderName
-	}
-	traceIDHeaderName := headerConfig.TraceIDHeaderName
-	if len(traceIDHeaderName) == 0 {
-		traceIDHeaderName = DefaultTraceIDHeaderName
-	}
-	return spanIDHeaderName, traceIDHeaderName
 }

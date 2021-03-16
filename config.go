@@ -39,28 +39,8 @@ type Config struct {
 	Providers map[string]ProviderConstructor `json:"-"`
 }
 
-// HeaderConfig specifies relevant header parameters.
-type HeaderConfig struct {
-
-	// SpanIDHeaderName is used to set custom header in response and logs.
-	SpanIDHeaderName string `json:"spanIDHeaderName"`
-
-	// TraceIDHeaderName is used to set custom header in response and logs.
-	TraceIDHeaderName string `json:"traceIDHeaderName"`
-}
-
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider
 // objects created by ConfigureTracerProvider.
 type TraceConfig struct {
-	HeaderConfig  HeaderConfig
 	TraceProvider trace.TracerProvider
-}
-
-// TracingConfig represents a component for tracing. It will be used to unmarshal
-// the configuration provided in application.yaml file.
-type TracingConfig struct {
-	// Provider describe the configuration for this application.
-	Provider Config
-	// Headers  is the header name  configuration for this application.
-	Headers HeaderConfig
 }
