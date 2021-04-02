@@ -28,7 +28,10 @@ import (
 // key value pairs that can be provided to a logger.
 func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
 	return func(kv []interface{}, request *http.Request) []interface{} {
-		traceID, spanID := ExtractTraceInformation(request.Context())
+		traceID, spanID, valid := ExtractTraceInformation(request.Context())
+		if !valid {
+			return kv
+		}
 		return append(kv, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID)
 	}
 }
@@ -37,11 +40,11 @@ func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
 // is not started in middleware, then it will be returning noopSpan which will
 // have traceID[32 digits] and spanID[16 digits] having all 0's i.e.
 // 00000000000000000000000000000000 and 0000000000000000 respectively.
-func ExtractTraceInformation(ctx context.Context) (string, string) {
+func ExtractTraceInformation(ctx context.Context) (string, string, bool) {
 	span := trace.SpanFromContext(ctx)
 	traceID := span.SpanContext().TraceID.String()
 	spanID := span.SpanContext().SpanID.String()
-	return traceID, spanID
+	return traceID, spanID, span.SpanContext().IsValid()
 }
 
 // InjectTraceInformation will be injecting traceParent and tracestate as

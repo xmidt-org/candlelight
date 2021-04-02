@@ -36,6 +36,9 @@ var (
 // A different provider can be used if a constructor for it is provided in the
 // config.
 func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
+	if config.Default {
+		return trace.NewNoopTracerProvider(), nil
+	}
 	if len(config.Provider) == 0 {
 		return nil, nilProviderErr
 	}

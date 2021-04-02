@@ -20,6 +20,11 @@ import "go.opentelemetry.io/otel/trace"
 
 // Config specifies parameters relevant for otel trace provider.
 type Config struct {
+	// Default will be useful incase client want to make tracing optional. Set
+	// Default = true will skip  settings and return NoopTracerProvider, Set
+	// Default = false will be try to create the traceProvider based in configuration.
+	Default bool `json:"default"`
+
 	// ApplicationName is the name for this application.
 	ApplicationName string `json:"applicationName"`
 

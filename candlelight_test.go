@@ -78,6 +78,10 @@ func TestConfigureTracerProvider(t *testing.T) {
 			config: Config{},
 			err:    nilProviderErr,
 		},
+		{
+			config: Config{Default: true},
+			err:    nil,
+		},
 	}
 	for i, record := range testData {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
