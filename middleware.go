@@ -17,9 +17,10 @@
 package candlelight
 
 import (
+	"net/http"
+
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
 )
 
 const (
@@ -38,14 +39,14 @@ const (
 func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
-		ctx := prop.Extract(r.Context(), r.Header)
+		ctx := prop.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 		rsc := trace.RemoteSpanContextFromContext(ctx)
 		tracer := traceConfig.TraceProvider.Tracer(r.URL.Path)
 		ctx, span := tracer.Start(ctx, r.URL.Path)
 		defer span.End()
 		if !rsc.IsValid() {
-			w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID.String())
-			w.Header().Set(traceIDHeaderName, span.SpanContext().TraceID.String())
+			w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID().String())
+			w.Header().Set(traceIDHeaderName, span.SpanContext().TraceID().String())
 		}
 		delegate.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -2,9 +2,11 @@ package candlelight
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func TestExtractTraceInformation(t *testing.T) {
@@ -15,6 +17,6 @@ func TestExtractTraceInformation(t *testing.T) {
 
 func TestInjectTraceInformation(t *testing.T) {
 	headers := http.Header{}
-	InjectTraceInformation(context.TODO(), headers)
+	InjectTraceInformation(context.TODO(), propagation.HeaderCarrier(headers))
 	assert.Empty(t, headers)
 }

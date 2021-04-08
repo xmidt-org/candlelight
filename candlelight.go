@@ -18,13 +18,13 @@ package candlelight
 
 import (
 	"fmt"
+	"strings"
+
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
-	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
-	"strings"
 )
 
 var (
@@ -64,13 +64,8 @@ var providersConfig = map[string]ProviderConstructor{
 	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
 		traceProvider, _, err := jaeger.NewExportPipeline(
 			jaeger.WithCollectorEndpoint(cfg.Endpoint),
-			jaeger.WithProcess(jaeger.Process{
-				ServiceName: cfg.ApplicationName,
-				Tags: []label.KeyValue{
-					label.String("exporter", cfg.Provider),
-				},
-			}),
-			jaeger.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
+			jaeger.WithProcessFromEnv(),
+			jaeger.WithSDKOptions(sdktrace.WithSampler(sdktrace.AlwaysSample())),
 		)
 		if err != nil {
 			return nil, err
@@ -79,8 +74,7 @@ var providersConfig = map[string]ProviderConstructor{
 	},
 	"zipkin": func(cfg Config) (trace.TracerProvider, error) {
 		traceProvider, err := zipkin.NewExportPipeline(cfg.Endpoint,
-			cfg.ApplicationName,
-			zipkin.WithSDK(&sdktrace.Config{DefaultSampler: sdktrace.AlwaysSample()}),
+			zipkin.WithSDKOptions(sdktrace.WithSampler(sdktrace.AlwaysSample())),
 		)
 		return traceProvider, err
 	},

@@ -18,10 +18,11 @@ package candlelight
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/xmidt-org/webpa-common/logging/logginghttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
 )
 
 // InjectTraceInformationInLogger adds the traceID and spanID to
@@ -39,8 +40,8 @@ func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
 // 00000000000000000000000000000000 and 0000000000000000 respectively.
 func ExtractTraceInformation(ctx context.Context) (string, string) {
 	span := trace.SpanFromContext(ctx)
-	traceID := span.SpanContext().TraceID.String()
-	spanID := span.SpanContext().SpanID.String()
+	traceID := span.SpanContext().TraceID().String()
+	spanID := span.SpanContext().SpanID().String()
 	return traceID, spanID
 }
 
