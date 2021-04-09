@@ -19,6 +19,7 @@ package candlelight
 import (
 	"net/http"
 
+	"github.com/justinas/alice"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -36,6 +37,7 @@ const (
 // generate new trace id. Example of traceparent will be
 // version[2]-traceId[32]-spanId[16]-traceFlags[2]. It is mandatory for continuing
 // existing traces while tracestate is optional.
+// Deprecated. Please consider using EchoFirstTraceNodeInfo.
 func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
@@ -50,4 +52,21 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 		}
 		delegate.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// EchoFirstNodeTraceInfo captures the trace information from a request and writes it
+// back in the response headers if the request is the first one in the trace path.
+func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) alice.Constructor {
+	return func(delegate http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+			rsc := trace.RemoteSpanContextFromContext(ctx)
+			if !rsc.IsValid() {
+				sc := trace.SpanContextFromContext(ctx)
+				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
+				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
+			}
+			delegate.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
