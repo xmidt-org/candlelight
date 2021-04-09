@@ -3,7 +3,6 @@ module github.com/xmidt-org/candlelight
 go 1.15
 
 require (
-	github.com/justinas/alice v1.2.0
 	github.com/spf13/viper v1.7.1 // indirect
 	github.com/stretchr/testify v1.7.0
 	github.com/xmidt-org/webpa-common v1.11.4

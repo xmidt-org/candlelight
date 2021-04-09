@@ -19,7 +19,6 @@ package candlelight
 import (
 	"net/http"
 
-	"github.com/justinas/alice"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -56,7 +55,7 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 
 // EchoFirstNodeTraceInfo captures the trace information from a request and writes it
 // back in the response headers if the request is the first one in the trace path.
-func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) alice.Constructor {
+func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.Handler) http.Handler {
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
