@@ -16,7 +16,10 @@
  */
 package candlelight
 
-import "go.opentelemetry.io/otel/trace"
+import (
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+)
 
 // Config specifies parameters relevant for otel trace provider.
 type Config struct {
@@ -41,6 +44,14 @@ type Config struct {
 
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider
 // objects created by ConfigureTracerProvider.
+// (Deprecated). Consider using TracingConfig
 type TraceConfig struct {
 	TraceProvider trace.TracerProvider
+}
+
+// TracingConfig contains the core dependencies for any component that will be
+// part of tracing by either starting spans or propagating trace context across API boundaries.
+type TracingConfig struct {
+	TracerProvider trace.TracerProvider
+	Propagator     propagation.TextMapPropagator
 }
