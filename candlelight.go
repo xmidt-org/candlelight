@@ -23,7 +23,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/semconv"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -65,7 +67,12 @@ var providersConfig = map[string]ProviderConstructor{
 		traceProvider, _, err := jaeger.NewExportPipeline(
 			jaeger.WithCollectorEndpoint(cfg.Endpoint),
 			jaeger.WithProcessFromEnv(),
-			jaeger.WithSDKOptions(sdktrace.WithSampler(sdktrace.AlwaysSample())),
+			jaeger.WithSDKOptions(
+				sdktrace.WithSampler(sdktrace.AlwaysSample()),
+				sdktrace.WithResource(resource.NewWithAttributes(
+					semconv.ServiceNameKey.String(cfg.ApplicationName)),
+				),
+			),
 		)
 		if err != nil {
 			return nil, err
@@ -74,7 +81,12 @@ var providersConfig = map[string]ProviderConstructor{
 	},
 	"zipkin": func(cfg Config) (trace.TracerProvider, error) {
 		traceProvider, err := zipkin.NewExportPipeline(cfg.Endpoint,
-			zipkin.WithSDKOptions(sdktrace.WithSampler(sdktrace.AlwaysSample())),
+			zipkin.WithSDKOptions(
+				sdktrace.WithSampler(sdktrace.AlwaysSample()),
+				sdktrace.WithResource(
+					resource.NewWithAttributes(semconv.ServiceNameKey.String(cfg.ApplicationName)),
+				),
+			),
 		)
 		return traceProvider, err
 	},
