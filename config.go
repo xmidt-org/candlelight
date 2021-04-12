@@ -49,9 +49,16 @@ type TraceConfig struct {
 	TraceProvider trace.TracerProvider
 }
 
-// Tracing contains the core dependencies for any component that will be
-// part of tracing by either starting spans or propagating trace context across API boundaries.
+// Tracing contains the core dependencies to make tracing possible across an
+// application.
 type Tracing struct {
+	// Enabled should be set to false if the tracerProvider is a noop which
+	// essentially disables tracing in the system.
+	Enabled bool
+
+	// TracerProvider helps create trace spans.
 	TracerProvider trace.TracerProvider
-	Propagator     propagation.TextMapPropagator
+
+	// Propagator helps propagate trace context across API boundaries.
+	Propagator propagation.TextMapPropagator
 }
