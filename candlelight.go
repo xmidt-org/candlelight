@@ -17,6 +17,7 @@
 package candlelight
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -30,16 +31,23 @@ import (
 )
 
 var (
-	nilProviderErr = fmt.Errorf("No provider is configured")
+	ErrTracerProviderNotFound    = errors.New("TracerProvider builder could not be found")
+	ErrTracerProviderBuildFailed = errors.New("Failed building TracerProvider")
 )
 
+// DefaultTracerProvider is used when no provider is given.
+// The Noop tracer provider turns all tracing related operations into
+// noops essentially disabling tracing.
+const DefaultTracerProvider = "noop"
+
 // ConfigureTracerProvider creates the TracerProvider based on the configuration
-// provided. It has built-in support for jaeger, zipkin, and stdout providers.
+// provided. It has built-in support for jaeger, zipkin, stdout and noop providers.
 // A different provider can be used if a constructor for it is provided in the
 // config.
+// If a provider name is not provided, a noop tracerProvider will be returned.
 func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	if len(config.Provider) == 0 {
-		return nil, nilProviderErr
+		config.Provider = DefaultTracerProvider
 	}
 	// Handling camelcase of provider.
 	config.Provider = strings.ToLower(config.Provider)
@@ -48,11 +56,11 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 		providerConfig = config.Providers[config.Provider]
 	}
 	if providerConfig == nil {
-		return nil, nilProviderErr
+		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
 	}
 	provider, err := providerConfig(config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
 	}
 	return provider, nil
 }
@@ -103,5 +111,8 @@ var providersConfig = map[string]ProviderConstructor{
 		}
 		traceProvider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(otExporter))
 		return traceProvider, nil
+	},
+	"noop": func(config Config) (trace.TracerProvider, error) {
+		return trace.NewNoopTracerProvider(), nil
 	},
 }
