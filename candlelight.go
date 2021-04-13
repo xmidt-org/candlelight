@@ -78,9 +78,11 @@ var providersConfig = map[string]ProviderConstructor{
 			jaeger.WithProcessFromEnv(),
 			jaeger.WithSDKOptions(
 				sdktrace.WithSampler(sdktrace.AlwaysSample()),
-				sdktrace.WithResource(resource.NewWithAttributes(
-					semconv.ServiceNameKey.String(cfg.ApplicationName)),
-					attribute.String("exporter", cfg.Provider),
+				sdktrace.WithResource(
+					resource.NewWithAttributes(
+						semconv.ServiceNameKey.String(cfg.ApplicationName),
+						attribute.String("exporter", cfg.Provider),
+					),
 				),
 			),
 		)
