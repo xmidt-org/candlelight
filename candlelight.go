@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
@@ -79,6 +80,7 @@ var providersConfig = map[string]ProviderConstructor{
 				sdktrace.WithSampler(sdktrace.AlwaysSample()),
 				sdktrace.WithResource(resource.NewWithAttributes(
 					semconv.ServiceNameKey.String(cfg.ApplicationName)),
+					attribute.String("exporter", cfg.Provider),
 				),
 			),
 		)
