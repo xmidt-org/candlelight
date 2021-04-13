@@ -44,7 +44,7 @@ type Config struct {
 
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider
 // objects created by ConfigureTracerProvider.
-// (Deprecated). Consider using Tracing
+// (Deprecated). Consider using Tracing instead.
 type TraceConfig struct {
 	TraceProvider trace.TracerProvider
 }
