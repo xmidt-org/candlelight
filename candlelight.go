@@ -52,9 +52,9 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	}
 	// Handling camelcase of provider.
 	config.Provider = strings.ToLower(config.Provider)
-	providerConfig := providersConfig[config.Provider]
+	providerConfig := config.Providers[config.Provider]
 	if providerConfig == nil {
-		providerConfig = config.Providers[config.Provider]
+		providerConfig = providersConfig[config.Provider]
 	}
 	if providerConfig == nil {
 		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
