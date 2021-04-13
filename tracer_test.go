@@ -10,9 +10,11 @@ import (
 )
 
 func TestExtractTraceInformation(t *testing.T) {
-	traceId, spanId := ExtractTraceInformation(context.TODO())
-	assert.Equal(t, traceId, "00000000000000000000000000000000")
-	assert.Equal(t, spanId, "0000000000000000")
+	assert := assert.New(t)
+	traceId, spanId, ok := ExtractTraceInformation(context.TODO())
+	assert.Equal(traceId, "00000000000000000000000000000000")
+	assert.Equal(spanId, "0000000000000000")
+	assert.False(ok)
 }
 
 func TestInjectTraceInformation(t *testing.T) {
