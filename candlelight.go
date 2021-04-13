@@ -75,7 +75,6 @@ var providersConfig = map[string]ProviderConstructor{
 	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
 		traceProvider, _, err := jaeger.NewExportPipeline(
 			jaeger.WithCollectorEndpoint(cfg.Endpoint),
-			jaeger.WithProcessFromEnv(),
 			jaeger.WithSDKOptions(
 				sdktrace.WithSampler(sdktrace.AlwaysSample()),
 				sdktrace.WithResource(
