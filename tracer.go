@@ -18,35 +18,49 @@ package candlelight
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/xmidt-org/webpa-common/logging/logginghttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
-	"net/http"
 )
 
-// InjectTraceInformationInLogger adds the traceID and spanID to
+// InjectTraceInfoInLogger adds the traceID and spanID to
 // key value pairs that can be provided to a logger.
-func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
-	return func(kv []interface{}, request *http.Request) []interface{} {
-		traceID, spanID := ExtractTraceInformation(request.Context())
-		return append(kv, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID)
+func InjectTraceInfoInLogger() logginghttp.LoggerFunc {
+	return func(kvs []interface{}, request *http.Request) []interface{} {
+		kvs, _ = AppendTraceInfo(request.Context(), kvs)
+		return kvs
 	}
 }
 
-// ExtractTraceInformation will be extracting the traceID and spanID. If span
-// is not started in middleware, then it will be returning noopSpan which will
-// have traceID[32 digits] and spanID[16 digits] having all 0's i.e.
-// 00000000000000000000000000000000 and 0000000000000000 respectively.
-func ExtractTraceInformation(ctx context.Context) (string, string) {
-	span := trace.SpanFromContext(ctx)
-	traceID := span.SpanContext().TraceID.String()
-	spanID := span.SpanContext().SpanID.String()
-	return traceID, spanID
+// AppendTraceInfo appends the trace and span ID key value pairs if they
+// are found in the context. The boolean is a quick way to know if the pairs
+// were added.
+// This should be useful for adding tracing information in logging statements.
+func AppendTraceInfo(ctx context.Context, kvs []interface{}) ([]interface{}, bool) {
+	traceID, spanID, ok := ExtractTraceInfo(ctx)
+	if !ok {
+		return kvs, false
+	}
+	return append(kvs, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID), true
 }
 
-// InjectTraceInformation will be injecting traceParent and tracestate as
+// ExtractTraceInfo returns the ID of the trace flowing through the context
+// as well as ID the current active span. The third boolean return value represents
+// whether the returned IDs are valid and safe to use. OpenTelemetry's noop
+// tracer provider, for instance, returns zero value trace information that's
+// considered invalid and should be ignored.
+func ExtractTraceInfo(ctx context.Context) (string, string, bool) {
+	span := trace.SpanFromContext(ctx)
+	traceID := span.SpanContext().TraceID().String()
+	spanID := span.SpanContext().SpanID().String()
+	return traceID, spanID, span.SpanContext().IsValid()
+}
+
+// InjectTraceInfo will be injecting traceParent and tracestate as
 // headers in carrier from span which is available in context.
-func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
+func InjectTraceInfo(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
 	prop.Inject(ctx, carrier)
 }

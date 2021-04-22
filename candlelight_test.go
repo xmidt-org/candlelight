@@ -18,76 +18,99 @@ package candlelight
 
 import (
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"strconv"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestConfigureTracerProvider(t *testing.T) {
-
-	testData := []struct {
-		config Config
-		err    error
+	tcs := []struct {
+		Description string
+		Config      Config
+		Err         error
 	}{
 		{
-			config: Config{
+			Description: "Jaeger: Missing endpoint",
+			Config: Config{
 				Provider: "jaeger",
 			},
-			err: errors.New("collectorEndpoint must not be empty"),
+			Err: ErrTracerProviderBuildFailed,
 		},
 		{
-			config: Config{
+			Description: "Zipkin: Missing endpoint",
+			Config: Config{
+				Provider: "Zipkin",
+			},
+			Err: ErrTracerProviderBuildFailed,
+		},
+		{
+			Description: "Jaeger: Valid",
+			Config: Config{
 				Provider: "jaeger",
 				Endpoint: "http://localhost",
 			},
-			err: nil,
 		},
 		{
-			config: Config{
+			Description: "Zipkin: Valid",
+			Config: Config{
 				Provider: "Zipkin",
 				Endpoint: "http://localhost",
 			},
-			err: nil,
 		},
 		{
-			config: Config{
-				Provider: "Zipkin",
-			},
-			err: errors.New("collector URL cannot be empty"),
-		},
-		{
-			config: Config{
+			Description: "Unknown Provider",
+			Config: Config{
 				Provider: "undefined",
 			},
-			err: nilProviderErr,
+			Err: ErrTracerProviderNotFound,
 		},
 		{
-			config: Config{
+			Description: "Stdout: Valid",
+			Config: Config{
 				Provider: "stdOut",
 			},
-			err: nil,
 		},
 		{
-			config: Config{
+			Description: "Stdout: Valid skip export",
+			Config: Config{
 				Provider:        "stdoUt",
 				SkipTraceExport: true,
 			},
-			err: nil,
 		},
 		{
-			config: Config{},
-			err:    nilProviderErr,
+			Description: "Default",
+			Config:      Config{},
+		},
+		{
+			Description: "NoOp: Valid",
+			Config: Config{
+				Provider: "noop",
+			},
+		},
+		{
+			Description: "Custom provider",
+			Config: Config{
+				Provider: "coolest",
+				Providers: map[string]ProviderConstructor{
+					"coolest": func(_ Config) (trace.TracerProvider, error) {
+						return trace.NewNoopTracerProvider(), nil
+					},
+				},
+			},
 		},
 	}
-	for i, record := range testData {
-		t.Run(strconv.Itoa(i), func(t *testing.T) {
-			var (
-				assert = assert.New(t)
-				_, err = ConfigureTracerProvider(record.config)
-			)
-			assert.Equal(record.err, err)
 
+	for _, tc := range tcs {
+		t.Run(tc.Description, func(t *testing.T) {
+			var (
+				assert  = assert.New(t)
+				tp, err = ConfigureTracerProvider(tc.Config)
+			)
+			if tc.Err == nil {
+				assert.NotNil(tp)
+			}
+			assert.True(errors.Is(err, tc.Err))
 		})
 	}
-
 }

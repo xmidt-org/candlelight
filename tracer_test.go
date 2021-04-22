@@ -2,19 +2,23 @@ package candlelight
 
 import (
 	"context"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"go.opentelemetry.io/otel/propagation"
 )
 
-func TestExtractTraceInformation(t *testing.T) {
-	traceId, spanId := ExtractTraceInformation(context.TODO())
-	assert.Equal(t, traceId, "00000000000000000000000000000000")
-	assert.Equal(t, spanId, "0000000000000000")
+func TestExtractTraceInfo(t *testing.T) {
+	assert := assert.New(t)
+	traceId, spanId, ok := ExtractTraceInfo(context.TODO())
+	assert.Equal(traceId, "00000000000000000000000000000000")
+	assert.Equal(spanId, "0000000000000000")
+	assert.False(ok)
 }
 
-func TestInjectTraceInformation(t *testing.T) {
+func TestInjectTraceInfo(t *testing.T) {
 	headers := http.Header{}
-	InjectTraceInformation(context.TODO(), headers)
+	InjectTraceInfo(context.TODO(), propagation.HeaderCarrier(headers))
 	assert.Empty(t, headers)
 }
