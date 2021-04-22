@@ -28,13 +28,22 @@ import (
 // InjectTraceInformationInLogger adds the traceID and spanID to
 // key value pairs that can be provided to a logger.
 func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
-	return func(kv []interface{}, request *http.Request) []interface{} {
-		traceID, spanID, ok := ExtractTraceInformation(request.Context())
-		if !ok {
-			return kv
-		}
-		return append(kv, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID)
+	return func(kvs []interface{}, request *http.Request) []interface{} {
+		kvs, _ = AppendTraceInformation(request.Context(), kvs)
+		return kvs
 	}
+}
+
+// AppendTraceInformation appends the trace and span ID key value pairs if they
+// are found in the context. The boolean is a quick way to know if the pairs
+// were added.
+// This should be useful for adding tracing information in logging statements.
+func AppendTraceInformation(ctx context.Context, kvs []interface{}) ([]interface{}, bool) {
+	traceID, spanID, ok := ExtractTraceInformation(ctx)
+	if !ok {
+		return kvs, false
+	}
+	return append(kvs, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID), true
 }
 
 // ExtractTraceInformation returns the ID of the trace flowing through the context
