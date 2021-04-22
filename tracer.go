@@ -25,42 +25,42 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// InjectTraceInformationInLogger adds the traceID and spanID to
+// InjectTraceInfoInLogger adds the traceID and spanID to
 // key value pairs that can be provided to a logger.
-func InjectTraceInformationInLogger() logginghttp.LoggerFunc {
+func InjectTraceInfoInLogger() logginghttp.LoggerFunc {
 	return func(kvs []interface{}, request *http.Request) []interface{} {
-		kvs, _ = AppendTraceInformation(request.Context(), kvs)
+		kvs, _ = AppendTraceInfo(request.Context(), kvs)
 		return kvs
 	}
 }
 
-// AppendTraceInformation appends the trace and span ID key value pairs if they
+// AppendTraceInfo appends the trace and span ID key value pairs if they
 // are found in the context. The boolean is a quick way to know if the pairs
 // were added.
 // This should be useful for adding tracing information in logging statements.
-func AppendTraceInformation(ctx context.Context, kvs []interface{}) ([]interface{}, bool) {
-	traceID, spanID, ok := ExtractTraceInformation(ctx)
+func AppendTraceInfo(ctx context.Context, kvs []interface{}) ([]interface{}, bool) {
+	traceID, spanID, ok := ExtractTraceInfo(ctx)
 	if !ok {
 		return kvs, false
 	}
 	return append(kvs, SpanIDLogKeyName, spanID, TraceIdLogKeyName, traceID), true
 }
 
-// ExtractTraceInformation returns the ID of the trace flowing through the context
+// ExtractTraceInfo returns the ID of the trace flowing through the context
 // as well as ID the current active span. The third boolean return value represents
 // whether the returned IDs are valid and safe to use. OpenTelemetry's noop
 // tracer provider, for instance, returns zero value trace information that's
 // considered invalid and should be ignored.
-func ExtractTraceInformation(ctx context.Context) (string, string, bool) {
+func ExtractTraceInfo(ctx context.Context) (string, string, bool) {
 	span := trace.SpanFromContext(ctx)
 	traceID := span.SpanContext().TraceID().String()
 	spanID := span.SpanContext().SpanID().String()
 	return traceID, spanID, span.SpanContext().IsValid()
 }
 
-// InjectTraceInformation will be injecting traceParent and tracestate as
+// InjectTraceInfo will be injecting traceParent and tracestate as
 // headers in carrier from span which is available in context.
-func InjectTraceInformation(ctx context.Context, carrier propagation.TextMapCarrier) {
+func InjectTraceInfo(ctx context.Context, carrier propagation.TextMapCarrier) {
 	prop := propagation.TraceContext{}
 	prop.Inject(ctx, carrier)
 }
