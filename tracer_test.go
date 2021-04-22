@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 )
 
-func TestExtractTraceInformation(t *testing.T) {
+func TestExtractTraceInfo(t *testing.T) {
 	assert := assert.New(t)
 	traceId, spanId, ok := ExtractTraceInfo(context.TODO())
 	assert.Equal(traceId, "00000000000000000000000000000000")
@@ -17,7 +17,7 @@ func TestExtractTraceInformation(t *testing.T) {
 	assert.False(ok)
 }
 
-func TestInjectTraceInformation(t *testing.T) {
+func TestInjectTraceInfo(t *testing.T) {
 	headers := http.Header{}
 	InjectTraceInfo(context.TODO(), propagation.HeaderCarrier(headers))
 	assert.Empty(t, headers)
