@@ -2,7 +2,7 @@
 
 candlelight provides a simple chainable or uber-fx based wrapper for OpenTelemetry
 
-[![Build Status](https://travis-ci.com/xmidt-org/candlelight.svg?branch=main)](https://travis-ci.com/xmidt-org/candlelight)
+[![Build Status](https://github.com/xmidt-org/candlelight/workflows/CI/badge.svg)](https://github.com/xmidt-org/candlelight/actions)
 [![codecov.io](http://codecov.io/github/xmidt-org/candlelight/coverage.svg?branch=main)](http://codecov.io/github/xmidt-org/candlelight?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xmidt-org/candlelight)](https://goreportcard.com/report/github.com/xmidt-org/candlelight)
 [![Apache V2 License](http://img.shields.io/badge/license-Apache%20V2-blue.svg)](https://github.com/xmidt-org/candlelight/blob/main/LICENSE)
