@@ -3,7 +3,6 @@ package candlelight
 import (
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/trace"
 )
 
 // Unmarshal helps load tracing components from configuration.
@@ -17,9 +16,7 @@ type Unmarshal struct {
 
 func (u Unmarshal) New(v *viper.Viper) (*Tracing, error) {
 	var tracing = Tracing{
-		Enabled:        false,
-		Propagator:     propagation.TraceContext{},
-		TracerProvider: trace.NewNoopTracerProvider(),
+		Propagator: propagation.TraceContext{},
 	}
 	var traceConfig Config
 	err := v.UnmarshalKey(u.Key, &traceConfig)
