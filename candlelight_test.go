@@ -114,3 +114,48 @@ func TestConfigureTracerProvider(t *testing.T) {
 		})
 	}
 }
+
+func TestNew(t *testing.T) {
+	tcs := []struct {
+		Description          string
+		ShouldFail           bool
+		ExpectTracingEnabled bool
+		Config               Config
+	}{
+		{
+			Description:          "Default means disabled tracing",
+			ShouldFail:           false,
+			ExpectTracingEnabled: false,
+			Config:               Config{},
+		},
+		{
+			Description: "Provider not found",
+			ShouldFail:  true,
+			Config: Config{
+				Provider: "somethingElse",
+			},
+		},
+		{
+			Description:          "Stdout provider",
+			ShouldFail:           false,
+			ExpectTracingEnabled: true,
+			Config: Config{
+				Provider: "stdout",
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.Description, func(t *testing.T) {
+			assert := assert.New(t)
+			tracing, err := New(tc.Config)
+			if tc.ShouldFail {
+				assert.NotNil(err)
+				assert.Nil(tracing)
+			} else {
+				assert.Nil(err)
+				assert.NotNil(tracing)
+				assert.Equal(tc.ExpectTracingEnabled, tracing.Enabled)
+			}
+		})
+	}
+}

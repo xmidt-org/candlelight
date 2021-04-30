@@ -25,6 +25,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
@@ -118,4 +119,21 @@ var providersConfig = map[string]ProviderConstructor{
 	"noop": func(config Config) (trace.TracerProvider, error) {
 		return trace.NewNoopTracerProvider(), nil
 	},
+}
+
+// New creates the structure with components used by apps to instrument
+// their code with OpenTelemetry traces.
+func New(config Config) (*Tracing, error) {
+	var tracing = Tracing{
+		Propagator: propagation.TraceContext{},
+	}
+	tracerProvider, err := ConfigureTracerProvider(config)
+	if err != nil {
+		return nil, err
+	}
+	if len(config.Provider) != 0 && config.Provider != DefaultTracerProvider {
+		tracing.Enabled = true
+	}
+	tracing.TracerProvider = tracerProvider
+	return &tracing, nil
 }
