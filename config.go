@@ -17,7 +17,6 @@
 package candlelight
 
 import (
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -47,18 +46,4 @@ type Config struct {
 // (Deprecated). Consider using Tracing instead.
 type TraceConfig struct {
 	TraceProvider trace.TracerProvider
-}
-
-// Tracing contains the core dependencies to make tracing possible across an
-// application.
-type Tracing struct {
-	// Enabled should be set to false if the tracerProvider is a noop which
-	// essentially disables tracing in the system.
-	Enabled bool
-
-	// TracerProvider helps create trace spans.
-	TracerProvider trace.TracerProvider
-
-	// Propagator helps propagate trace context across API boundaries.
-	Propagator propagation.TextMapPropagator
 }
