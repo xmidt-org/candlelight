@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-- Add tracing unmarshaler. [#29](https://github.com/xmidt-org/candlelight/pull/29)
+- Add tracing factory. [#29](https://github.com/xmidt-org/candlelight/pull/29)
 
 ## [v0.0.4]
 - Add changes to allow tracing feature be optional. [#25](https://github.com/xmidt-org/candlelight/pull/25)
