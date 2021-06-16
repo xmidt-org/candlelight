@@ -17,11 +17,14 @@
 package candlelight
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpgrpc"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/exporters/trace/zipkin"
@@ -72,6 +75,33 @@ type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
+	"otlp": func(cfg Config) (trace.TracerProvider, error) {
+		// (1) send traces over gRPC
+		exporter, err := otlp.NewExporter(context.Background(),
+			otlpgrpc.NewDriver(
+				otlpgrpc.WithEndpoint(cfg.Endpoint),
+				otlpgrpc.WithInsecure(),
+			),
+		)
+		// (2) send traces over HTTP
+		// exporter, err := otlp.NewExporter(context.Background(),
+		// 	otlphttp.NewDriver(
+		// 		otlphttp.WithEndpoint(cfg.Endpoint),
+		// 		otlphttp.WithInsecure(),
+		// 	))
+		if err != nil {
+			return nil, err
+		}
+		return sdktrace.NewTracerProvider(
+			sdktrace.WithBatcher(exporter),
+			sdktrace.WithResource(
+				resource.NewWithAttributes(
+					semconv.ServiceNameKey.String(cfg.ApplicationName),
+				),
+			),
+		), nil
+
+	},
 	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
 		traceProvider, _, err := jaeger.NewExportPipeline(
 			jaeger.WithCollectorEndpoint(cfg.Endpoint),
