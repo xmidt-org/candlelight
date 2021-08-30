@@ -20,7 +20,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/xmidt-org/webpa-common/logging/logginghttp"
+	"github.com/xmidt-org/webpa-common/v2/logging/logginghttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )

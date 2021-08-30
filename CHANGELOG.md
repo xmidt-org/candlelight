@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Update webpa-common to v2. [#34](https://github.com/xmidt-org/candlelight/pull/34)
 
 
 ## [v0.0.5]
