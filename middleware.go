@@ -28,6 +28,8 @@ const (
 	traceIDHeaderName = "X-Midt-Trace-ID"
 	SpanIDLogKeyName  = "span-id"
 	TraceIdLogKeyName = "trace-id"
+	// HeaderWPATIDKeyName is the header key for the WebPA transaction UUID
+	HeaderWPATIDKeyName = "X-WebPA-Transaction-Id"
 )
 
 // TraceMiddleware acts as interceptor that is the first point of interaction
