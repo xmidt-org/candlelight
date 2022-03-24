@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v0.0.8]
+- Added header key for the WebPA transaction UUID. [#37](https://github.com/xmidt-org/candlelight/pull/37)
+
 ## [v0.0.7]
 - upgraded webpa-common to v2.0.4
 
@@ -32,7 +35,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.7..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.8..HEAD
+[v0.0.8]: https://github.com/xmidt-org/candlelight/compare/v0.0.7..v0.0.8
 [v0.0.7]: https://github.com/xmidt-org/candlelight/compare/v0.0.6..v0.0.7
 [v0.0.6]: https://github.com/xmidt-org/candlelight/compare/v0.0.5..v0.0.6
 [v0.0.5]: https://github.com/xmidt-org/candlelight/compare/v0.0.4..v0.0.5
