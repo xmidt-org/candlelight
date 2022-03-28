@@ -17,6 +17,8 @@
 package candlelight
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"net/http"
 
 	"go.opentelemetry.io/otel/propagation"
@@ -70,4 +72,15 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// GenTID generates a 16-byte long string
+// it returns "N/A" in the extreme case the random string could not be generated
+func GenTID() (tid string) {
+	buf := make([]byte, 16)
+	tid = "N/A"
+	if _, err := rand.Read(buf); err == nil {
+		tid = base64.RawURLEncoding.EncodeToString(buf)
+	}
+	return
 }
