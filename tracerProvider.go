@@ -19,15 +19,16 @@ package candlelight
 import (
 	"errors"
 	"fmt"
+	"io"
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/stdout"
-	"go.opentelemetry.io/otel/exporters/trace/jaeger"
-	"go.opentelemetry.io/otel/exporters/trace/zipkin"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -73,47 +74,64 @@ type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
 	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
-		traceProvider, _, err := jaeger.NewExportPipeline(
-			jaeger.WithCollectorEndpoint(cfg.Endpoint),
-			jaeger.WithSDKOptions(
-				sdktrace.WithSampler(sdktrace.AlwaysSample()),
-				sdktrace.WithResource(
-					resource.NewWithAttributes(
-						semconv.ServiceNameKey.String(cfg.ApplicationName),
-						attribute.String("exporter", cfg.Provider),
-					),
-				),
-			),
-		)
-		if err != nil {
-			return nil, err
+		if cfg.Endpoint == "" {
+			return nil, ErrTracerProviderBuildFailed
 		}
-		return traceProvider, nil
+
+		exp, err := jaeger.New(
+			jaeger.WithCollectorEndpoint(
+				jaeger.WithEndpoint(cfg.Endpoint)))
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
+		}
+
+		tp := sdktrace.NewTracerProvider(
+			sdktrace.WithBatcher(exp),
+			sdktrace.WithSampler(sdktrace.AlwaysSample()),
+			sdktrace.WithResource(
+				resource.NewWithAttributes(
+					semconv.SchemaURL,
+					semconv.ServiceNameKey.String(cfg.ApplicationName),
+					attribute.String("exporter", cfg.Provider),
+				)),
+		)
+		return tp, nil
 	},
 	"zipkin": func(cfg Config) (trace.TracerProvider, error) {
-		traceProvider, err := zipkin.NewExportPipeline(cfg.Endpoint,
-			zipkin.WithSDKOptions(
-				sdktrace.WithSampler(sdktrace.AlwaysSample()),
-				sdktrace.WithResource(
-					resource.NewWithAttributes(semconv.ServiceNameKey.String(cfg.ApplicationName)),
-				),
-			),
+		if cfg.Endpoint == "" {
+			return nil, ErrTracerProviderBuildFailed
+		}
+
+		exp, err := zipkin.New(cfg.Endpoint)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
+		}
+
+		tp := sdktrace.NewTracerProvider(
+			sdktrace.WithBatcher(exp),
+			sdktrace.WithSampler(sdktrace.AlwaysSample()),
+			sdktrace.WithResource(
+				resource.NewWithAttributes(
+					semconv.SchemaURL,
+					semconv.ServiceNameKey.String(cfg.ApplicationName),
+					attribute.String("exporter", cfg.Provider),
+				)),
 		)
-		return traceProvider, err
+		return tp, nil
 	},
 	"stdout": func(cfg Config) (trace.TracerProvider, error) {
 		var option stdout.Option
 		if cfg.SkipTraceExport {
-			option = stdout.WithoutTraceExport()
+			option = stdout.WithWriter(io.Discard)
 		} else {
 			option = stdout.WithPrettyPrint()
 		}
-		otExporter, err := stdout.NewExporter(option)
+		otExporter, err := stdout.New(option)
 		if err != nil {
 			return nil, err
 		}
-		traceProvider := sdktrace.NewTracerProvider(sdktrace.WithSyncer(otExporter))
-		return traceProvider, nil
+		tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(otExporter))
+		return tp, nil
 	},
 	"noop": func(config Config) (trace.TracerProvider, error) {
 		return trace.NewNoopTracerProvider(), nil
