@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v0.0.10]
+- Update to use otel v1.7.0. [#44](https://github.com/xmidt-org/candlelight/pull/44)
+- Update to use use common workflows for simplicity. [#45](https://github.com/xmidt-org/candlelight/pull/45)
+- Update the dependencies to the latest. [#46](https://github.com/xmidt-org/candlelight/pull/46)
+
+
 ## [v0.0.9]
 - Moved GenTID function from transaction package to candlelight. [#38](https://github.com/xmidt-org/candlelight/pull/38)
 
@@ -38,7 +44,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.9..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.10..HEAD
+[v0.0.10]: https://github.com/xmidt-org/candlelight/compare/v0.0.9..v0.0.10
 [v0.0.9]: https://github.com/xmidt-org/candlelight/compare/v0.0.8..v0.0.9
 [v0.0.8]: https://github.com/xmidt-org/candlelight/compare/v0.0.7..v0.0.8
 [v0.0.7]: https://github.com/xmidt-org/candlelight/compare/v0.0.6..v0.0.7
