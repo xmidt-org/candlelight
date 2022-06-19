@@ -45,11 +45,11 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
 		ctx := prop.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-		rsc := trace.RemoteSpanContextFromContext(ctx)
+		sc := trace.SpanContextFromContext(ctx)
 		tracer := traceConfig.TraceProvider.Tracer(r.URL.Path)
 		ctx, span := tracer.Start(ctx, r.URL.Path)
 		defer span.End()
-		if !rsc.IsValid() {
+		if !sc.IsValid() {
 			w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID().String())
 			w.Header().Set(traceIDHeaderName, span.SpanContext().TraceID().String())
 		}
@@ -63,9 +63,8 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			rsc := trace.RemoteSpanContextFromContext(ctx)
 			sc := trace.SpanContextFromContext(ctx)
-			if sc.IsValid() && !rsc.IsValid() {
+			if sc.IsValid() {
 				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
 				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
 			}
