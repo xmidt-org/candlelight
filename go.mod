@@ -10,5 +10,5 @@ require (
 	go.opentelemetry.io/otel/exporters/zipkin v1.8.0
 	go.opentelemetry.io/otel/sdk v1.8.0
 	go.opentelemetry.io/otel/trace v1.8.0
-	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
+	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
 )
