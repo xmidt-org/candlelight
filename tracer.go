@@ -31,7 +31,7 @@ type LoggerFunc func([]interface{}, *http.Request) []interface{}
 
 // InjectTraceInfoInLogger adds the traceID and spanID to
 // key value pairs that can be provided to a logger.
-func InjectTraceInfoInLogger() LoggerFunc {
+func InjectTraceInfoInLogger() func([]interface{}, *http.Request) []interface{} {
 	return func(kvs []interface{}, request *http.Request) []interface{} {
 		kvs, _ = AppendTraceInfo(request.Context(), kvs)
 		return kvs
