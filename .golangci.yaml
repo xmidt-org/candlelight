@@ -1,8 +1,4 @@
 ---
-linters-settings:
-  misspell:
-    locale: US
-
 linters:
   enable:
     - bodyclose
@@ -26,6 +22,8 @@ issues:
         - funlen
 
 linters-settings:
+  misspell:
+    locale: US
   errorlint:
     # Report non-wrapping error creation using fmt.Errorf
     errorf: false
