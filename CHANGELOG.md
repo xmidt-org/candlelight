@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.0.12]
 - Upgraded Go to v1.19 and Open Telemetry libraries to v1.11.0, updated README [#70](https://github.com/xmidt-org/candlelight/pull/70)
 
 ## [v0.0.11]
@@ -49,7 +51,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.10..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.12..HEAD
+[v0.0.12]: https://github.com/xmidt-org/candlelight/compare/v0.0.11..v0.0.12
+[v0.0.11]: https://github.com/xmidt-org/candlelight/compare/v0.0.10..v0.0.11
 [v0.0.10]: https://github.com/xmidt-org/candlelight/compare/v0.0.9..v0.0.10
 [v0.0.9]: https://github.com/xmidt-org/candlelight/compare/v0.0.8..v0.0.9
 [v0.0.8]: https://github.com/xmidt-org/candlelight/compare/v0.0.7..v0.0.8
