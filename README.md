@@ -14,8 +14,7 @@ candlelight provides a simple chainable or uber-fx based wrapper for OpenTelemet
 ## Summary
 
 `candlelight` takes the OpenTelemetry API and makes a couple of useful wrappers for
-web services that enable tracing initially.  Longer term this library will ideally
-suport logging and metrics as well.
+web services that enable tracing initially. 
 
 ## Table of Contents
 
