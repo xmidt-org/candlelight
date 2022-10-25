@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [v0.0.12]
+- Upgraded Go to v1.19 and Open Telemetry libraries to v1.11.0, updated README [#70](https://github.com/xmidt-org/candlelight/pull/70)
+
+## [v0.0.11]
+- Fixed malformed linter config [#62](https://github.com/xmidt-org/candlelight/pull/62)
+- Updated tracer, relaxed return type in function within Tracer.go [#60](https://github.com/xmidt-org/candlelight/pull/60)
+
+## [v0.0.10]
+- Update to use otel v1.7.0. [#44](https://github.com/xmidt-org/candlelight/pull/44)
+- Update to use use common workflows for simplicity. [#45](https://github.com/xmidt-org/candlelight/pull/45)
+- Update the dependencies to the latest. [#46](https://github.com/xmidt-org/candlelight/pull/46)
+
+
+## [v0.0.9]
+- Moved GenTID function from transaction package to candlelight. [#38](https://github.com/xmidt-org/candlelight/pull/38)
+
+## [v0.0.8]
+- Added header key for the WebPA transaction UUID. [#37](https://github.com/xmidt-org/candlelight/pull/37)
+
+## [v0.0.7]
+- upgraded webpa-common to v2.0.4
+
+## [v0.0.6]
+- Update webpa-common to v2. [#34](https://github.com/xmidt-org/candlelight/pull/34)
 
 ## [v0.0.5]
 - Add tracing factory. [#29](https://github.com/xmidt-org/candlelight/pull/29)
@@ -27,7 +51,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.5..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.12..HEAD
+[v0.0.12]: https://github.com/xmidt-org/candlelight/compare/v0.0.11..v0.0.12
+[v0.0.11]: https://github.com/xmidt-org/candlelight/compare/v0.0.10..v0.0.11
+[v0.0.10]: https://github.com/xmidt-org/candlelight/compare/v0.0.9..v0.0.10
+[v0.0.9]: https://github.com/xmidt-org/candlelight/compare/v0.0.8..v0.0.9
+[v0.0.8]: https://github.com/xmidt-org/candlelight/compare/v0.0.7..v0.0.8
+[v0.0.7]: https://github.com/xmidt-org/candlelight/compare/v0.0.6..v0.0.7
+[v0.0.6]: https://github.com/xmidt-org/candlelight/compare/v0.0.5..v0.0.6
 [v0.0.5]: https://github.com/xmidt-org/candlelight/compare/v0.0.4..v0.0.5
 [v0.0.4]: https://github.com/xmidt-org/candlelight/compare/v0.0.3..v0.0.4
 [v0.0.3]: https://github.com/xmidt-org/candlelight/compare/v0.0.2..v0.0.3

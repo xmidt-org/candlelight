@@ -17,6 +17,8 @@
 package candlelight
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"net/http"
 
 	"go.opentelemetry.io/otel/propagation"
@@ -28,6 +30,8 @@ const (
 	traceIDHeaderName = "X-Midt-Trace-ID"
 	SpanIDLogKeyName  = "span-id"
 	TraceIdLogKeyName = "trace-id"
+	// HeaderWPATIDKeyName is the header key for the WebPA transaction UUID
+	HeaderWPATIDKeyName = "X-WebPA-Transaction-Id"
 )
 
 // TraceMiddleware acts as interceptor that is the first point of interaction
@@ -41,11 +45,11 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		prop := propagation.TraceContext{}
 		ctx := prop.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-		rsc := trace.RemoteSpanContextFromContext(ctx)
+		sc := trace.SpanContextFromContext(ctx)
 		tracer := traceConfig.TraceProvider.Tracer(r.URL.Path)
 		ctx, span := tracer.Start(ctx, r.URL.Path)
 		defer span.End()
-		if !rsc.IsValid() {
+		if !sc.IsValid() {
 			w.Header().Set(spanIDHeaderName, span.SpanContext().SpanID().String())
 			w.Header().Set(traceIDHeaderName, span.SpanContext().TraceID().String())
 		}
@@ -59,13 +63,23 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			rsc := trace.RemoteSpanContextFromContext(ctx)
 			sc := trace.SpanContextFromContext(ctx)
-			if sc.IsValid() && !rsc.IsValid() {
+			if sc.IsValid() {
 				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
 				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
 			}
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// GenTID generates a 16-byte long string
+// it returns "N/A" in the extreme case the random string could not be generated
+func GenTID() (tid string) {
+	buf := make([]byte, 16)
+	tid = "N/A"
+	if _, err := rand.Read(buf); err == nil {
+		tid = base64.RawURLEncoding.EncodeToString(buf)
+	}
+	return
 }
