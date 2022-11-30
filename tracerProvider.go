@@ -23,8 +23,6 @@ import (
 	"io"
 	"strings"
 
-	// "github.com/DataDog/datadog-api-client-go/v2/api/datadog"
-	// "github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -94,15 +92,12 @@ var providersConfig = map[string]ProviderConstructor{
 			return nil, err
 		}
 
-		bsp := sdktrace.NewBatchSpanProcessor(exporter)
-
 		return sdktrace.NewTracerProvider(
-			sdktrace.WithSpanProcessor(bsp),
+			sdktrace.WithBatcher(exporter),
 			sdktrace.WithResource(
 				resource.NewWithAttributes(
 					semconv.SchemaURL,
 					semconv.ServiceNameKey.String(cfg.ApplicationName),
-					attribute.String("exporter", cfg.Provider),
 				),
 			),
 		), nil
