@@ -23,8 +23,6 @@ import (
 	"io"
 	"strings"
 
-	// "github.com/DataDog/datadog-api-client-go/v2/api/datadog"
-	// "github.com/DataDog/datadog-api-client-go/v2/api/datadogV1"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
