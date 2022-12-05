@@ -26,6 +26,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/exporters/zipkin"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -75,19 +76,35 @@ type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
-	"otlp": func(cfg Config) (trace.TracerProvider, error) {
-		// (1) send traces over gRPC
+	"otlp/grpc": func(cfg Config) (trace.TracerProvider, error) {
+		// Send traces over gRPC
 		exporter, err := otlptracegrpc.New(context.Background(),
 
 			otlptracegrpc.WithEndpoint(cfg.Endpoint),
 			otlptracegrpc.WithInsecure(),
 		)
-		// (2) send traces over HTTP
-		// exporter, err := otlp.NewExporter(context.Background(),
-		// 	otlphttp.NewDriver(
-		// 		otlphttp.WithEndpoint(cfg.Endpoint),
-		// 		otlphttp.WithInsecure(),
-		// 	))
+		if err != nil {
+			return nil, err
+		}
+
+		return sdktrace.NewTracerProvider(
+			sdktrace.WithBatcher(exporter),
+			sdktrace.WithResource(
+				resource.NewWithAttributes(
+					semconv.SchemaURL,
+					semconv.ServiceNameKey.String(cfg.ApplicationName),
+				),
+			),
+		), nil
+
+	},
+	"otlp/http": func(cfg Config) (trace.TracerProvider, error) {
+		// Send traces over HTTP
+		exporter, err := otlptracehttp.New(context.Background(),
+
+			otlptracehttp.WithEndpoint(cfg.Endpoint),
+			otlptracehttp.WithInsecure(),
+		)
 		if err != nil {
 			return nil, err
 		}
