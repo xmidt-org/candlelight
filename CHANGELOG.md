@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Added support for OTLP and the Otel Collector [78](https://github.com/xmidt-org/candlelight/pull/78)
 
 ## [v0.0.12]
 - Upgraded Go to v1.19 and Open Telemetry libraries to v1.11.0, updated README [#70](https://github.com/xmidt-org/candlelight/pull/70)
