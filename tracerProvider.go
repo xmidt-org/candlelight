@@ -78,13 +78,16 @@ type ProviderConstructor func(config Config) (trace.TracerProvider, error)
 var providersConfig = map[string]ProviderConstructor{
 	"otlp/grpc": func(cfg Config) (trace.TracerProvider, error) {
 		// Send traces over gRPC
+		if cfg.Endpoint == "" {
+			return nil, ErrTracerProviderBuildFailed
+		}
 		exporter, err := otlptracegrpc.New(context.Background(),
 
 			otlptracegrpc.WithEndpoint(cfg.Endpoint),
 			otlptracegrpc.WithInsecure(),
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
 		}
 
 		return sdktrace.NewTracerProvider(
@@ -100,13 +103,16 @@ var providersConfig = map[string]ProviderConstructor{
 	},
 	"otlp/http": func(cfg Config) (trace.TracerProvider, error) {
 		// Send traces over HTTP
+		if cfg.Endpoint == "" {
+			return nil, ErrTracerProviderBuildFailed
+		}
 		exporter, err := otlptracehttp.New(context.Background(),
 
 			otlptracehttp.WithEndpoint(cfg.Endpoint),
 			otlptracehttp.WithInsecure(),
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
 		}
 
 		return sdktrace.NewTracerProvider(
