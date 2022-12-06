@@ -25,8 +25,8 @@ go.opentelemetry.io/otel/exporters/jaeger v1.11.1 h1:F9Io8lqWdGyIbY3/SOGki34LX/l
 go.opentelemetry.io/otel/exporters/jaeger v1.11.1/go.mod h1:lRa2w3bQ4R4QN6zYsDgy7tEezgoKEu7Ow2g35Y75+KI=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2 h1:BhEVgvuE1NWLLuMLvC6sif791F45KFHi5GhOs1KunZU=
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2/go.mod h1:bx//lU66dPzNT+Y0hHA12ciKoMOH9iixEwCqC1OeQWQ=
-go.opentelemetry.io/otel/exporters/zipkin v1.11.1 h1:JlJ3/oQoyqlrPDCfsSVFcHgGeHvZq+hr1VPWtiYCXTo=
-go.opentelemetry.io/otel/exporters/zipkin v1.11.1/go.mod h1:T4S6aVwIS1+MHA+dJHCcPROtZe6ORwnv5vMKPRapsFw=
+go.opentelemetry.io/otel/exporters/zipkin v1.11.2 h1:wGdWn04d1sEnxfO4TUF/UcQfEIu80IvqUXU1lENKyFg=
+go.opentelemetry.io/otel/exporters/zipkin v1.11.2/go.mod h1:I60/FdYilVKkuDOzenyp8LqJLryRC/Mr918G5hchvkM=
 go.opentelemetry.io/otel/sdk v1.11.2 h1:GF4JoaEx7iihdMFu30sOyRx52HDHOkl9xQ8SMqNXUiU=
 go.opentelemetry.io/otel/sdk v1.11.2/go.mod h1:wZ1WxImwpq+lVRo4vsmSOxdd+xwoUJ6rqyLc3SyX9aU=
 go.opentelemetry.io/otel/trace v1.11.2 h1:Xf7hWSF2Glv0DE3MH7fBHvtpSBsjcBUe5MYAmZM/+y0=
