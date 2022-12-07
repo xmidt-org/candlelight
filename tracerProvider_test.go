@@ -31,6 +31,34 @@ func TestConfigureTracerProvider(t *testing.T) {
 		Err         error
 	}{
 		{
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+			},
+		},
+		{
+			Description: "Otlp/gRPC: Missing Endpoint",
+			Config: Config{
+				Provider: "otlp/grpc",
+			},
+			Err: ErrTracerProviderBuildFailed,
+		},
+		{
+			Description: "Otlp/HTTP: Valid",
+			Config: Config{
+				Provider: "otlp/http",
+				Endpoint: "http://localhost",
+			},
+		},
+		{
+			Description: "Otlp/HTTP: Missing Endpoint",
+			Config: Config{
+				Provider: "otlp/http",
+			},
+			Err: ErrTracerProviderBuildFailed,
+		},
+		{
 			Description: "Jaeger: Missing endpoint",
 			Config: Config{
 				Provider: "jaeger",
