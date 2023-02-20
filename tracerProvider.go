@@ -67,9 +67,10 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 
 	// Setting up trace sampler based on SampleLocalTraces value in config file
 	// Default behavior: never sample local traces
-	sampler := sdktrace.ParentBased(sdktrace.NeverSample(), sdktrace.WithLocalParentNotSampled(sdktrace.NeverSample()))
+	sampler := sdktrace.ParentBased(sdktrace.NeverSample())
+
 	if sampleLocalTraces {
-		sampler = sdktrace.ParentBased(sdktrace.AlwaysSample(), sdktrace.WithLocalParentSampled(sdktrace.AlwaysSample()))
+		sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
 	}
 
 	provider, err := providerConfig(config, sampler)
