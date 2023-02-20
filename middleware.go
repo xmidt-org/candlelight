@@ -64,7 +64,7 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			sc := trace.SpanContextFromContext(ctx)
-			if !sc.IsValid() {
+			if sc.IsValid() {
 				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
 				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
 			}
