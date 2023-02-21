@@ -57,13 +57,23 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	// Handling camelcase of provider.
 	config.Provider = strings.ToLower(config.Provider)
 	providerConfig := config.Providers[config.Provider]
+	sampleLocalTraces := config.SampleLocalTraces
 	if providerConfig == nil {
 		providerConfig = providersConfig[config.Provider]
 	}
 	if providerConfig == nil {
 		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
 	}
-	provider, err := providerConfig(config)
+
+	// Setting up trace sampler based on SampleLocalTraces value in config file
+	// Default behavior: never sample local traces
+	sampler := sdktrace.ParentBased(sdktrace.NeverSample())
+
+	if sampleLocalTraces {
+		sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
+	}
+
+	provider, err := providerConfig(config, sampler)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
 	}
@@ -72,11 +82,11 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 
 // ProviderConstructor is useful when client wants to add their own custom
 // TracerProvider.
-type ProviderConstructor func(config Config) (trace.TracerProvider, error)
+type ProviderConstructor func(config Config, sampler sdktrace.Sampler) (trace.TracerProvider, error)
 
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
-	"otlp/grpc": func(cfg Config) (trace.TracerProvider, error) {
+	"otlp/grpc": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		// Send traces over gRPC
 		if cfg.Endpoint == "" {
 			return nil, ErrTracerProviderBuildFailed
@@ -98,10 +108,11 @@ var providersConfig = map[string]ProviderConstructor{
 					semconv.ServiceNameKey.String(cfg.ApplicationName),
 				),
 			),
+			sdktrace.WithSampler(smplr),
 		), nil
 
 	},
-	"otlp/http": func(cfg Config) (trace.TracerProvider, error) {
+	"otlp/http": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		// Send traces over HTTP
 		if cfg.Endpoint == "" {
 			return nil, ErrTracerProviderBuildFailed
@@ -123,10 +134,11 @@ var providersConfig = map[string]ProviderConstructor{
 					semconv.ServiceNameKey.String(cfg.ApplicationName),
 				),
 			),
+			sdktrace.WithSampler(smplr),
 		), nil
 
 	},
-	"jaeger": func(cfg Config) (trace.TracerProvider, error) {
+	"jaeger": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		if cfg.Endpoint == "" {
 			return nil, ErrTracerProviderBuildFailed
 		}
@@ -150,7 +162,7 @@ var providersConfig = map[string]ProviderConstructor{
 		)
 		return tp, nil
 	},
-	"zipkin": func(cfg Config) (trace.TracerProvider, error) {
+	"zipkin": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		if cfg.Endpoint == "" {
 			return nil, ErrTracerProviderBuildFailed
 		}
@@ -172,7 +184,7 @@ var providersConfig = map[string]ProviderConstructor{
 		)
 		return tp, nil
 	},
-	"stdout": func(cfg Config) (trace.TracerProvider, error) {
+	"stdout": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		var option stdout.Option
 		if cfg.SkipTraceExport {
 			option = stdout.WithWriter(io.Discard)
@@ -186,7 +198,7 @@ var providersConfig = map[string]ProviderConstructor{
 		tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
 		return tp, nil
 	},
-	"noop": func(config Config) (trace.TracerProvider, error) {
+	"noop": func(config Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		return trace.NewNoopTracerProvider(), nil
 	},
 }

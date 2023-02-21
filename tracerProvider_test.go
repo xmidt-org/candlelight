@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -121,7 +122,7 @@ func TestConfigureTracerProvider(t *testing.T) {
 			Config: Config{
 				Provider: "coolest",
 				Providers: map[string]ProviderConstructor{
-					"coolest": func(_ Config) (trace.TracerProvider, error) {
+					"coolest": func(_ Config, _ sdktrace.Sampler) (trace.TracerProvider, error) {
 						return trace.NewNoopTracerProvider(), nil
 					},
 				},

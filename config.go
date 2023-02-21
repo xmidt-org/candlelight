@@ -39,6 +39,11 @@ type Config struct {
 	// Providers are useful when client wants to add their own custom
 	// TracerProvider.
 	Providers map[string]ProviderConstructor `json:"-"`
+
+	// SampleLocalTraces defines whether local traces will be created and exported.
+	// SampleLocalTraces = true if you want to create and export local traces. Otherwise,
+	// only remote traces/spans will be sampled.
+	SampleLocalTraces bool `json:"sampleLocalTraces"`
 }
 
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider
