@@ -68,12 +68,12 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
 	}
 
-	// If no parentBasedTracing value is included, use default value
+	// If parentBased value is empty, use default value
 	if parentBasedTracing == "" {
 		parentBasedTracing = "ignore"
 	}
 
-	// If no parentBasedTracing value is included, use default value
+	// If noParent value is empty, use default value
 	if noParentTracing == "" {
 		noParentTracing = "never"
 	}
