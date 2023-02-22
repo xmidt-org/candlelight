@@ -40,12 +40,14 @@ type Config struct {
 	// TracerProvider.
 	Providers map[string]ProviderConstructor `json:"-"`
 
-	// ParentBased helps define the sampling decision for traces
-	// ParentBased = "ignore" (default), tracing is essentially turned off and "NoParent" value is ignored
+	// ParentBased and NoParent dictate if and when new spans should be created.
+	// ParentBased = "ignore" (default), tracing is effectively turned off and the "NoParent" value is ignored
 	// ParentBased = "honor", the sampling decision is made by the parent of the span
 	ParentBased string `json:"parentBased"`
 
-	// if the span has no parent, should new root spans be created?
+	// NoParent decided if a root span should be initiated if there's no parent
+	// This value is ignored if ParentBased = "ignore"
+	// "never" is the default value
 	NoParent string `json:"noParent"`
 }
 
