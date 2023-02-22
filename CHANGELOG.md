@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+- Split up the tracing configuration options so user can decide exactly what gets traced and when [#104](https://github.com/xmidt-org/candlelight/pull/104)
 
 ## [v0.0.14]
 - Updated traceProvider to only sample traces with remote parents (configurable) [#100](https://github.com/xmidt-org/candlelight/pull/100)
