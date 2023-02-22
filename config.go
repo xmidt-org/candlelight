@@ -40,10 +40,13 @@ type Config struct {
 	// TracerProvider.
 	Providers map[string]ProviderConstructor `json:"-"`
 
-	// SampleLocalTraces defines whether local traces will be created and exported.
-	// SampleLocalTraces = true if you want to create and export local traces. Otherwise,
-	// only remote traces/spans will be sampled.
-	SampleLocalTraces bool `json:"sampleLocalTraces"`
+	// ParentBased helps define the sampling decision for traces
+	// ParentBased = "ignore" (default), tracing is essentially turned off and "NoParent" value is ignored
+	// ParentBased = "honor", the sampling decision is made by the parent of the span
+	ParentBased string `json:"parentBased"`
+
+	// if the span has no parent, should new root spans be created?
+	NoParent string `json:"noParent"`
 }
 
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider

@@ -38,6 +38,8 @@ import (
 var (
 	ErrTracerProviderNotFound    = errors.New("TracerProvider builder could not be found")
 	ErrTracerProviderBuildFailed = errors.New("Failed building TracerProvider")
+	ErrInvalidParentBasedValue   = errors.New("Invalid ParentBased value provided in configuration")
+	ErrInvalidNoParentValue      = errors.New("Invalid No Parent value provided in configuration")
 )
 
 // DefaultTracerProvider is used when no provider is given.
@@ -57,7 +59,8 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	// Handling camelcase of provider.
 	config.Provider = strings.ToLower(config.Provider)
 	providerConfig := config.Providers[config.Provider]
-	sampleLocalTraces := config.SampleLocalTraces
+	parentBasedTracing := config.ParentBased
+	noParentTracing := config.NoParent
 	if providerConfig == nil {
 		providerConfig = providersConfig[config.Provider]
 	}
@@ -65,12 +68,33 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
 	}
 
-	// Setting up trace sampler based on SampleLocalTraces value in config file
-	// Default behavior: never sample local traces
-	sampler := sdktrace.ParentBased(sdktrace.NeverSample())
+	// If no parentBasedTracing value is included, use default value
+	if parentBasedTracing == "" {
+		parentBasedTracing = "ignore"
+	}
 
-	if sampleLocalTraces {
-		sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
+	// If no parentBasedTracing value is included, use default value
+	if noParentTracing == "" {
+		noParentTracing = "never"
+	}
+
+	// Setting up trace sampler based on ParentBased and NoParent values in the config
+	var sampler sdktrace.Sampler
+
+	if parentBasedTracing == "ignore" {
+		sampler = sdktrace.NeverSample()
+	} else if parentBasedTracing == "honor" {
+		if noParentTracing == "never" {
+			sampler = sdktrace.ParentBased(sdktrace.NeverSample())
+
+		} else if noParentTracing == "always" {
+			sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
+
+		} else {
+			return nil, ErrInvalidNoParentValue
+		}
+	} else {
+		return nil, ErrInvalidParentBasedValue
 	}
 
 	provider, err := providerConfig(config, sampler)

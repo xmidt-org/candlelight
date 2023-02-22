@@ -34,16 +34,81 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Otlp/gRPC: Valid",
 			Config: Config{
-				Provider: "otlp/grpc",
-				Endpoint: "http://localhost",
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "ignore",
+				NoParent:    "never",
+			},
+		},
+		{
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "honor",
+				NoParent:    "never",
+			},
+		},
+		{
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "honor",
+				NoParent:    "always",
+			},
+		},
+		{
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "ignore",
+				NoParent:    "always",
 			},
 		},
 		{
 			Description: "Otlp/gRPC: Missing Endpoint",
 			Config: Config{
-				Provider: "otlp/grpc",
+				Provider:    "otlp/grpc",
+				ParentBased: "ignore",
+				NoParent:    "never",
 			},
 			Err: ErrTracerProviderBuildFailed,
+		},
+		{
+			Description: "Valid Missing ParentBased Value",
+			Config: Config{
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+			},
+		},
+		{
+			Description: "Valid Missing NoParent Value",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "honor",
+			},
+		},
+		{
+			Description: "Invalid ParentBased Value",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "dishonor",
+			},
+			Err: ErrInvalidParentBasedValue,
+		},
+		{
+			Description: "Invalid No Parent Value",
+			Config: Config{
+				Provider:    "otlp/grpc",
+				Endpoint:    "http://localhost",
+				ParentBased: "honor",
+				NoParent:    "sometimes",
+			},
+			Err: ErrInvalidNoParentValue,
 		},
 		{
 			Description: "Otlp/HTTP: Valid",
