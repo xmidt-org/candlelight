@@ -45,7 +45,7 @@ type Config struct {
 	// ParentBased = "honor", the sampling decision is made by the parent of the span
 	ParentBased string `json:"parentBased"`
 
-	// NoParent decided if a root span should be initiated if there's no parent
+	// NoParent decides if a root span should be initiated in the case where there is no existing parent
 	// This value is ignored if ParentBased = "ignore"
 	// "never" is the default value
 	NoParent string `json:"noParent"`
