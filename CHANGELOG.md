@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [v0.0.15]
 - Split up the tracing configuration options so user can decide exactly what gets traced and when [#104](https://github.com/xmidt-org/candlelight/pull/104)
 
 ## [v0.0.14]
@@ -58,7 +60,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Updated the project configuration
 - Initial creation
 
-[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.14..HEAD
+[Unreleased]: https://github.com/xmidt-org/candlelight/compare/v0.0.15..HEAD
+[v0.0.15]: https://github.com/xmidt-org/candlelight/compare/v0.0.14..v0.0.15
 [v0.0.14]: https://github.com/xmidt-org/candlelight/compare/v0.0.13..v0.0.14
 [v0.0.13]: https://github.com/xmidt-org/candlelight/compare/v0.0.12..v0.0.13
 [v0.0.12]: https://github.com/xmidt-org/candlelight/compare/v0.0.11..v0.0.12
