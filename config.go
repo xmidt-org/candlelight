@@ -47,7 +47,8 @@ type Config struct {
 
 	// NoParent decides if a root span should be initiated in the case where there is no existing parent
 	// This value is ignored if ParentBased = "ignore"
-	// "never" is the default value
+	// NoParent = "never" (default), root spans are not initiated
+	// NoParent = "always", roots spans are initiated
 	NoParent string `json:"noParent"`
 }
 
