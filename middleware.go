@@ -70,49 +70,62 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			reader := r.Body
-			data, err := io.ReadAll(reader)
-			if err != nil {
-				log.Printf("failed to read body: %s", err)
-			}
-
-			r.Body, r.GetBody = xhttp.NewRewindBytes(data)
-			var msg wrp.Message
-
-			if err := json.Unmarshal(data, &msg); err != nil {
-				log.Printf("failed to unmarshal payload: %s", err)
-			}
-
-			var traceHeaders []string
-			headers := r.Header.Values("X-midt-Headers")
-			if len(headers) != 0 {
-				// WRP Xmidt Headers Format
-				traceHeaders = headers
-			} else if r.Header.Get("Content-Type") == "application/msgpack" {
-				//WRP Msgpack Format
-				err = wrp.NewDecoderBytes(data, wrp.Msgpack).Decode(&msg)
-				if err != nil {
-					log.Printf("failed to decode msgpack: %s", err)
-				}
-				traceHeaders = msg.Headers
-			} else if msg.Headers != nil {
-				//WRP JSON format
-				traceHeaders = msg.Headers
-			}
-
-			// Go through slice and add tracing headers to the request header
-			for i, f := range traceHeaders {
-				if f != "" {
-					parts := strings.Split(f, ":")
-					parts[1] = strings.Trim(parts[1], " ") // Remove leading space if there's any
-					r.Header.Set(parts[0], parts[1])
-				}
-				i++
-			}
-
-			p := propagation.HeaderCarrier(r.Header)
-			ctx := propagator.Extract(r.Context(), p)
+			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			sc := trace.SpanContextFromContext(ctx)
+
+			// If there is no traceparent information in HTTP headers, check for them elsewhere
+			if !sc.IsRemote() {
+
+				// Check for trace info in Xmidt headers
+				var traceHeaders []string
+				xmidtHeaders := r.Header.Values("X-midt-Headers")
+				if len(xmidtHeaders) != 0 {
+					traceHeaders = xmidtHeaders
+				} else {
+
+					// Check for trace info in the request body
+					reader := r.Body
+					bodyData, err := io.ReadAll(reader)
+					if err != nil {
+						log.Printf("failed to read body: %s", err)
+					}
+
+					r.Body, r.GetBody = xhttp.NewRewindBytes(bodyData)
+					var msg wrp.Message
+
+					if err := json.Unmarshal(bodyData, &msg); err != nil {
+						log.Printf("failed to unmarshal payload: %s", err)
+					}
+
+					if r.Header.Get("Content-Type") == "application/msgpack" {
+						// Request body is msgpack
+						err = wrp.NewDecoderBytes(bodyData, wrp.Msgpack).Decode(&msg)
+						if err != nil {
+							log.Printf("failed to decode msgpack: %s", err)
+						}
+						traceHeaders = msg.Headers
+					} else if msg.Headers != nil {
+						// Request body is JSON
+						traceHeaders = msg.Headers
+					}
+				}
+
+				// Add trace headers to TextMapCarrier
+				var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
+				for _, f := range traceHeaders {
+					if f != "" {
+						parts := strings.Split(f, ":")
+						// Remove leading space if there's any
+						parts[1] = strings.Trim(parts[1], " ")
+						tmp.Set(parts[0], parts[1])
+					}
+				}
+
+				// Propagate context with traceheaders
+				ctx = propagation.TraceContext{}.Extract(ctx, tmp)
+				sc = trace.SpanContextFromContext(ctx)
+			}
+
 			if sc.IsValid() {
 				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
 				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
