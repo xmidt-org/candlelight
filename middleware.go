@@ -20,7 +20,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -71,7 +71,7 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			reader := r.Body
-			data, err := ioutil.ReadAll(reader)
+			data, err := io.ReadAll(reader)
 			if err != nil {
 				log.Printf("failed to read body: %s", err)
 			}
