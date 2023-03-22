@@ -17,6 +17,7 @@
 package candlelight
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -26,7 +27,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/xmidt-org/webpa-common/xhttp"
 	"github.com/xmidt-org/wrp-go/v3"
 
 	"go.opentelemetry.io/otel/propagation"
@@ -107,9 +107,15 @@ func findWRPTraceHeaders(ctx context.Context, r *http.Request) context.Context {
 			log.Printf("failed to read body: %s", err)
 		}
 
-		r.Body, r.GetBody = xhttp.NewRewindBytes(bodyData)
-		var msg wrp.Message
+		// Reset request body
+		newBody := bytes.NewReader(bodyData)
+		r.Body = io.NopCloser(newBody)
+		r.GetBody = func() (io.ReadCloser, error) {
+			_, err := newBody.Seek(0, 0)
+			return io.NopCloser(newBody), err
+		}
 
+		var msg wrp.Message
 		if err := json.Unmarshal(bodyData, &msg); err != nil {
 			log.Printf("failed to unmarshal payload: %s", err)
 		}
