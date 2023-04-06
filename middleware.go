@@ -17,25 +17,22 @@
 package candlelight
 
 import (
-	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/json"
-	"io"
-	"log"
 	"net/http"
 	"strings"
 
 	"github.com/xmidt-org/wrp-go/v3"
+	"github.com/xmidt-org/wrp-go/v3/wrpcontext"
+	"github.com/xmidt-org/wrp-go/v3/wrphttp"
 
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
 const (
-	spanIDHeaderName  = "X-Midt-Span-ID"
-	traceIDHeaderName = "X-Midt-Trace-ID"
+	spanIDHeaderName  = "X-Xmidt-Span-ID"
+	traceIDHeaderName = "X-Xmidt-Trace-ID"
 	SpanIDLogKeyName  = "span-id"
 	TraceIdLogKeyName = "trace-id"
 	// HeaderWPATIDKeyName is the header key for the WebPA transaction UUID
@@ -71,82 +68,33 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			sc := trace.SpanContextFromContext(ctx)
+			r, _ = wrphttp.DecodeRequest(r, nil)
 
-			// If there is no traceparent information in HTTP headers, check for them elsewhere
-			if !sc.IsRemote() {
-				ctx = findWRPTraceHeaders(ctx, r)
-				sc = trace.SpanContextFromContext(ctx)
+			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+			var msg *wrp.Message
+			wrpcontext.GetAs(ctx, &msg)
+			traceHeaders := msg.Headers
+
+			// Iterate through the trace headers (if any), format them, and add them to ctx
+			var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
+			for _, f := range traceHeaders {
+				if f != "" {
+					parts := strings.Split(f, ":")
+					// Remove leading space if there's any
+					parts[1] = strings.Trim(parts[1], " ")
+					tmp.Set(parts[0], parts[1])
+				}
+				ctx = propagation.TraceContext{}.Extract(ctx, tmp)
 			}
 
+			sc := trace.SpanContextFromContext(ctx)
 			if sc.IsValid() {
-				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
-				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
+				w.Header().Set(spanIDHeaderName, sc.SpanID().String())
+				w.Header().Set(traceIDHeaderName, sc.TraceID().String())
 			}
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
-}
-
-// findWRPTraceHeaders looks for trace headers in WRP messages
-// Returns a context propagated with the trace information
-func findWRPTraceHeaders(ctx context.Context, r *http.Request) context.Context {
-
-	// Check for trace info in Xmidt headers
-	var traceHeaders []string
-	xmidtHeaders := r.Header.Values("X-midt-Headers")
-	if len(xmidtHeaders) != 0 {
-		traceHeaders = xmidtHeaders
-	} else {
-
-		// Check for trace info in the request body
-		reader := r.Body
-		bodyData, err := io.ReadAll(reader)
-		if err != nil {
-			log.Printf("failed to read body: %s", err)
-		}
-
-		// Reset request body
-		newBody := bytes.NewReader(bodyData)
-		r.Body = io.NopCloser(newBody)
-		r.GetBody = func() (io.ReadCloser, error) {
-			_, err := newBody.Seek(0, 0)
-			return io.NopCloser(newBody), err
-		}
-
-		var msg wrp.Message
-		if err := json.Unmarshal(bodyData, &msg); err != nil {
-			log.Printf("failed to unmarshal payload: %s", err)
-		}
-
-		if r.Header.Get("Content-Type") == "application/msgpack" {
-			// Request body is msgpack
-			err = wrp.NewDecoderBytes(bodyData, wrp.Msgpack).Decode(&msg)
-			if err != nil {
-				log.Printf("failed to decode msgpack: %s", err)
-			}
-			traceHeaders = msg.Headers
-		} else if msg.Headers != nil {
-			// Request body is JSON
-			traceHeaders = msg.Headers
-		}
-	}
-
-	// Add trace headers to TextMapCarrier
-	var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
-	for _, f := range traceHeaders {
-		if f != "" {
-			parts := strings.Split(f, ":")
-			// Remove leading space if there's any
-			parts[1] = strings.Trim(parts[1], " ")
-			tmp.Set(parts[0], parts[1])
-		}
-	}
-
-	// Propagate context with traceheaders
-	ctx = propagation.TraceContext{}.Extract(ctx, tmp)
-	return ctx
 }
 
 // GenTID generates a 16-byte long string
