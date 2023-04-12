@@ -70,10 +70,11 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 
 			r, _ = wrphttp.DecodeRequest(r, nil)
 
+			var traceHeaders []string
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			var msg *wrp.Message
-			wrpcontext.GetAs(ctx, &msg)
-			traceHeaders := msg.Headers
+			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
+				traceHeaders = msg.Headers
+			}
 
 			// Iterate through the trace headers (if any), format them, and add them to ctx
 			var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
