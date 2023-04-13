@@ -68,7 +68,9 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			r, _ = wrphttp.DecodeRequest(r, nil)
+			if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
+				r = req
+			}
 
 			var traceHeaders []string
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
@@ -85,9 +87,9 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 					parts[1] = strings.Trim(parts[1], " ")
 					tmp.Set(parts[0], parts[1])
 				}
-				ctx = propagation.TraceContext{}.Extract(ctx, tmp)
 			}
 
+			ctx = propagation.TraceContext{}.Extract(ctx, tmp)
 			sc := trace.SpanContextFromContext(ctx)
 			if sc.IsValid() {
 				w.Header().Set(spanIDHeaderName, sc.SpanID().String())
