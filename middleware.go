@@ -20,14 +20,19 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
+	"strings"
+
+	"github.com/xmidt-org/wrp-go/v3"
+	"github.com/xmidt-org/wrp-go/v3/wrpcontext"
+	"github.com/xmidt-org/wrp-go/v3/wrphttp"
 
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
 const (
-	spanIDHeaderName  = "X-Midt-Span-ID"
-	traceIDHeaderName = "X-Midt-Trace-ID"
+	spanIDHeaderName  = "X-Xmidt-Span-ID"
+	traceIDHeaderName = "X-Xmidt-Trace-ID"
 	SpanIDLogKeyName  = "span-id"
 	TraceIdLogKeyName = "trace-id"
 	// HeaderWPATIDKeyName is the header key for the WebPA transaction UUID
@@ -62,11 +67,33 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.Handler) http.Handler {
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+			if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
+				r = req
+			}
+
+			var traceHeaders []string
 			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
+				traceHeaders = msg.Headers
+			}
+
+			// Iterate through the trace headers (if any), format them, and add them to ctx
+			var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
+			for _, f := range traceHeaders {
+				if f != "" {
+					parts := strings.Split(f, ":")
+					// Remove leading space if there's any
+					parts[1] = strings.Trim(parts[1], " ")
+					tmp.Set(parts[0], parts[1])
+				}
+			}
+
+			ctx = propagation.TraceContext{}.Extract(ctx, tmp)
 			sc := trace.SpanContextFromContext(ctx)
 			if sc.IsValid() {
-				w.Header().Set("X-Midt-Span-ID", sc.SpanID().String())
-				w.Header().Set("X-Midt-Trace-ID", sc.TraceID().String())
+				w.Header().Set(spanIDHeaderName, sc.SpanID().String())
+				w.Header().Set(traceIDHeaderName, sc.TraceID().String())
 			}
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
