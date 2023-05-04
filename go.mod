@@ -8,7 +8,7 @@ require (
 	go.opentelemetry.io/otel v1.15.1
 	go.opentelemetry.io/otel/exporters/jaeger v1.15.1
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.15.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.15.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.15.1
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.15.1
 	go.opentelemetry.io/otel/exporters/zipkin v1.15.1
 	go.opentelemetry.io/otel/sdk v1.15.1
@@ -31,8 +31,8 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.15.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.15.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.15.1 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.15.1 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
