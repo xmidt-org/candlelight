@@ -3,7 +3,7 @@ module github.com/xmidt-org/candlelight
 go 1.19
 
 require (
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	github.com/xmidt-org/wrp-go/v3 v3.1.6
 	go.opentelemetry.io/otel v1.15.1
 	go.opentelemetry.io/otel/exporters/jaeger v1.15.1
