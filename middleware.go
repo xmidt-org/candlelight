@@ -17,6 +17,7 @@
 package candlelight
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
@@ -62,20 +63,27 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 	})
 }
 
-// EchoFirstNodeTraceInfo captures the trace information from a request and writes it
-// back in the response headers if the request is the first one in the trace path.
-func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.Handler) http.Handler {
+// EchoFirstNodeTraceInfo captures the trace information from a request, writes it
+// back in the response headers, and adds it to the request's context
+// It can also decode the request and save the resulting WRP object in the context if isDecodable is true
+func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodable bool) func(http.Handler) http.Handler {
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-			if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
-				r = req
+			var ctx context.Context
+
+			if isDecodable {
+				if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
+					r = req
+				}
 			}
 
 			var traceHeaders []string
-			ctx := propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
 				traceHeaders = msg.Headers
+			} else if headers := r.Header.Values("X-Xmidt-Headers"); len(headers) != 0 {
+				traceHeaders = headers
 			}
 
 			// Iterate through the trace headers (if any), format them, and add them to ctx
@@ -83,13 +91,16 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator) func(http.
 			for _, f := range traceHeaders {
 				if f != "" {
 					parts := strings.Split(f, ":")
-					// Remove leading space if there's any
-					parts[1] = strings.Trim(parts[1], " ")
-					tmp.Set(parts[0], parts[1])
+					if len(parts) > 1 {
+						// Remove leading space if there's any
+						parts[1] = strings.Trim(parts[1], " ")
+						tmp.Set(parts[0], parts[1])
+					}
 				}
 			}
 
 			ctx = propagation.TraceContext{}.Extract(ctx, tmp)
+
 			sc := trace.SpanContextFromContext(ctx)
 			if sc.IsValid() {
 				w.Header().Set(spanIDHeaderName, sc.SpanID().String())
