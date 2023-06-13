@@ -76,28 +76,30 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodabl
 				if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
 					r = req
 				}
+			}
 
-				var traceHeaders []string
-				ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-				if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
-					traceHeaders = msg.Headers
-				}
+			var traceHeaders []string
+			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
+			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
+				traceHeaders = msg.Headers
+			} else if headers := r.Header.Values("X-midt-Headers"); len(headers) != 0 {
+				traceHeaders = headers
+			}
 
-				// Iterate through the trace headers (if any), format them, and add them to ctx
-				var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
-				for _, f := range traceHeaders {
-					if f != "" {
-						parts := strings.Split(f, ":")
+			// Iterate through the trace headers (if any), format them, and add them to ctx
+			var tmp propagation.TextMapCarrier = propagation.MapCarrier{}
+			for _, f := range traceHeaders {
+				if f != "" {
+					parts := strings.Split(f, ":")
+					if len(parts) > 1 {
 						// Remove leading space if there's any
 						parts[1] = strings.Trim(parts[1], " ")
 						tmp.Set(parts[0], parts[1])
 					}
 				}
-
-				ctx = propagation.TraceContext{}.Extract(ctx, tmp)
-			} else {
-				ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			}
+
+			ctx = propagation.TraceContext{}.Extract(ctx, tmp)
 
 			sc := trace.SpanContextFromContext(ctx)
 			if sc.IsValid() {
