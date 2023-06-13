@@ -82,7 +82,7 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodabl
 			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
 				traceHeaders = msg.Headers
-			} else if headers := r.Header.Values("X-midt-Headers"); len(headers) != 0 {
+			} else if headers := r.Header.Values("X-Xmidt-Headers"); len(headers) != 0 {
 				traceHeaders = headers
 			}
 
