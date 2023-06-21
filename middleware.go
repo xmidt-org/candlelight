@@ -100,12 +100,6 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodabl
 			}
 
 			ctx = propagation.TraceContext{}.Extract(ctx, tmp)
-
-			sc := trace.SpanContextFromContext(ctx)
-			if sc.IsValid() {
-				w.Header().Set(spanIDHeaderName, sc.SpanID().String())
-				w.Header().Set(traceIDHeaderName, sc.TraceID().String())
-			}
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
