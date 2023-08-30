@@ -6,7 +6,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/xmidt-org/wrp-go/v3 v3.1.6
 	go.opentelemetry.io/otel v1.17.0
-	go.opentelemetry.io/otel/exporters/jaeger v1.16.0
+	go.opentelemetry.io/otel/exporters/jaeger v1.17.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.16.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.16.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.17.0
