@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/xmidt-org/wrp-go/v3"
 	"github.com/xmidt-org/wrp-go/v3/wrpcontext"
 	"github.com/xmidt-org/wrp-go/v3/wrphttp"
 
@@ -80,7 +79,7 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodabl
 
 			var traceHeaders []string
 			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			if msg, ok := wrpcontext.Get[*wrp.Message](ctx); ok {
+			if msg, ok := wrpcontext.GetMessage(ctx); ok {
 				traceHeaders = msg.Headers
 			} else if headers := r.Header.Values("X-Xmidt-Headers"); len(headers) != 0 {
 				traceHeaders = headers
