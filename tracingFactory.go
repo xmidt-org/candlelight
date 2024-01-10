@@ -3,6 +3,7 @@ package candlelight
 import (
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // New creates a structure with components that apps can use to initialize OpenTelemetry
@@ -28,14 +29,14 @@ type Tracing struct {
 
 // IsNoop returns true if the tracer provider component is a noop. False otherwise.
 func (t Tracing) IsNoop() bool {
-	return t.TracerProvider() == trace.NewNoopTracerProvider()
+	return t.TracerProvider() == noop.NewTracerProvider()
 }
 
 // TracerProvider returns the tracer provider component. By default, the noop
 // tracer provider is returned.
 func (t Tracing) TracerProvider() trace.TracerProvider {
 	if t.tracerProvider == nil {
-		return trace.NewNoopTracerProvider()
+		return noop.NewTracerProvider()
 	}
 	return t.tracerProvider
 }
