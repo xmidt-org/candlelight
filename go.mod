@@ -12,7 +12,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.28.0
-	go.opentelemetry.io/otel/exporters/zipkin v1.27.0
+	go.opentelemetry.io/otel/exporters/zipkin v1.28.0
 	go.opentelemetry.io/otel/sdk v1.28.0
 	go.opentelemetry.io/otel/trace v1.28.0
 )
