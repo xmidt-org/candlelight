@@ -24,10 +24,10 @@ import (
 )
 
 var (
-	ErrTracerProviderNotFound    = errors.New("TracerProvider builder could not be found")
-	ErrTracerProviderBuildFailed = errors.New("Failed building TracerProvider")
-	ErrInvalidParentBasedValue   = errors.New("Invalid ParentBased value provided in configuration")
-	ErrInvalidNoParentValue      = errors.New("Invalid No Parent value provided in configuration")
+	ErrTracerProviderNotFound    = errors.New("tracerProvider builder could not be found")
+	ErrTracerProviderBuildFailed = errors.New("failed building TracerProvider")
+	ErrInvalidParentBasedValue   = errors.New("invalid ParentBased value provided in configuration")
+	ErrInvalidNoParentValue      = errors.New("invalid No Parent value provided in configuration")
 )
 
 // DefaultTracerProvider is used when no provider is given.
