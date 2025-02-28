@@ -57,8 +57,8 @@ func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			var ctx context.Context
-			var headerPrefix = tracing.headerPrefix
-			var propagator = tracing.propagator
+			headerPrefix := tracing.headerPrefix
+			propagator := tracing.propagator
 
 			if isDecodable {
 				if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
