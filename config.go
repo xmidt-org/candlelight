@@ -37,6 +37,9 @@ type Config struct {
 	// NoParent = "never" (default), root spans are not initiated
 	// NoParent = "always", roots spans are initiated
 	NoParent string `json:"noParent"`
+
+	// HeaderPrefix allows the client to specify the header relevant to their application's trace information
+	HeaderPrefix string `json:"HeaderPrefix"`
 }
 
 // TraceConfig will be used in TraceMiddleware to use config and TraceProvider

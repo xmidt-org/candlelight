@@ -52,11 +52,13 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 // EchoFirstNodeTraceInfo captures the trace information from a request, writes it
 // back in the response headers, and adds it to the request's context
 // It can also decode the request and save the resulting WRP object in the context if isDecodable is true
-func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodable bool) func(http.Handler) http.Handler {
+func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler) http.Handler {
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			var ctx context.Context
+			headerPrefix := tracing.headerPrefix
+			propagator := tracing.propagator
 
 			if isDecodable {
 				if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
@@ -68,7 +70,7 @@ func EchoFirstTraceNodeInfo(propagator propagation.TextMapPropagator, isDecodabl
 			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
 			if msg, ok := wrpcontext.GetMessage(ctx); ok {
 				traceHeaders = msg.Headers
-			} else if headers := r.Header.Values("X-Xmidt-Headers"); len(headers) != 0 {
+			} else if headers := r.Header.Values(headerPrefix); len(headers) != 0 {
 				traceHeaders = headers
 			}
 

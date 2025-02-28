@@ -13,7 +13,8 @@ import (
 // tracing instrumentation code.
 func New(config Config) (Tracing, error) {
 	var tracing = Tracing{
-		propagator: propagation.TraceContext{},
+		propagator:   propagation.TraceContext{},
+		headerPrefix: config.HeaderPrefix,
 	}
 	tracerProvider, err := ConfigureTracerProvider(config)
 	if err != nil {
@@ -28,6 +29,7 @@ func New(config Config) (Tracing, error) {
 type Tracing struct {
 	tracerProvider trace.TracerProvider
 	propagator     propagation.TextMapPropagator
+	headerPrefix   string
 }
 
 // IsNoop returns true if the tracer provider component is a noop. False otherwise.
