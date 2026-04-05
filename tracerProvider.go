@@ -15,7 +15,7 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/exporters/zipkin"
+	"go.opentelemetry.io/otel/exporters/zipkin" // nolint:staticcheck
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
@@ -69,19 +69,21 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	// Setting up trace sampler based on ParentBased and NoParent values in the config
 	var sampler sdktrace.Sampler
 
-	if parentBasedTracing == "ignore" {
+	switch parentBasedTracing {
+	case "ignore":
 		sampler = sdktrace.NeverSample()
-	} else if parentBasedTracing == "honor" {
-		if noParentTracing == "never" {
+	case "honor":
+		switch noParentTracing {
+		case "never":
 			sampler = sdktrace.ParentBased(sdktrace.NeverSample())
 
-		} else if noParentTracing == "always" {
+		case "always":
 			sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
 
-		} else {
+		default:
 			return nil, ErrInvalidNoParentValue
 		}
-	} else {
+	default:
 		return nil, ErrInvalidParentBasedValue
 	}
 
