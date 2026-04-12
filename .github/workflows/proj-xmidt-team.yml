@@ -12,10 +12,11 @@ on:
       - opened
 
 permissions:
+  contents: read
   issues: write
   pull-requests: write
 
 jobs:
   project:
-    uses: xmidt-org/shared-go/.github/workflows/proj.yml@4468342f575e09429c1b04637dcda065145846e4 # v4.9.40
+    uses: xmidt-org/shared-go/.github/workflows/proj-xmidt-team.yml@4468342f575e09429c1b04637dcda065145846e4 # v4.9.40
     secrets: inherit
