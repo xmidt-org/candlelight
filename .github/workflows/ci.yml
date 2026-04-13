@@ -25,18 +25,9 @@ permissions:
 
 jobs:
   ci:
-    uses: xmidt-org/shared-go/.github/workflows/ci.yml@4468342f575e09429c1b04637dcda065145846e4 # v4.9.40
+    # yamllint disable-line
+    uses: xmidt-org/shared-go/.github/workflows/ci.yml@aff0471aa7e2f96ddb059beb178f63747a7cc57e # v4.9.41
     with:
       release-type:   library
-      release-arch-arm64:    true
-      release-arch-amd64:    true
-      release-docker:        true
-      release-docker-latest: true
-      release-docker-major:  true
-      release-docker-minor:  true
-      release-docker-extras: |
-        .release/docker
-        LICENSE
-        NOTICE
       yaml-lint-skip: false
     secrets: inherit
