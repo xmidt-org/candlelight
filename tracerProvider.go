@@ -58,11 +58,13 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 
 	// If parentBased value is empty, use default value
 	if parentBasedTracing == "" {
+		// nolint:goconst
 		parentBasedTracing = "ignore"
 	}
 
 	// If noParent value is empty, use default value
 	if noParentTracing == "" {
+		// nolint:goconst
 		noParentTracing = "never"
 	}
 
@@ -72,11 +74,12 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	switch parentBasedTracing {
 	case "ignore":
 		sampler = sdktrace.NeverSample()
-	case "honor":
+	case "honor": // nolint:goconst
 		switch noParentTracing {
 		case "never":
 			sampler = sdktrace.ParentBased(sdktrace.NeverSample())
 
+		// nolint:goconst
 		case "always":
 			sampler = sdktrace.ParentBased(sdktrace.AlwaysSample())
 
@@ -100,6 +103,7 @@ type ProviderConstructor func(config Config, sampler sdktrace.Sampler) (trace.Tr
 
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
+	// nolint:goconst
 	"otlp/grpc": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		// Send traces over gRPC
 		if cfg.Endpoint == "" {
@@ -126,6 +130,7 @@ var providersConfig = map[string]ProviderConstructor{
 		), nil
 
 	},
+	// nolint:goconst
 	"otlp/http": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		// Send traces over HTTP
 		if cfg.Endpoint == "" {
@@ -152,6 +157,7 @@ var providersConfig = map[string]ProviderConstructor{
 		), nil
 
 	},
+	// nolint:goconst
 	"jaeger": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		if cfg.Endpoint == "" {
 			return nil, ErrTracerProviderBuildFailed
@@ -198,6 +204,7 @@ var providersConfig = map[string]ProviderConstructor{
 		)
 		return tp, nil
 	},
+	// nolint:goconst
 	"stdout": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
 		var option stdout.Option
 		if cfg.SkipTraceExport {
