@@ -20,47 +20,65 @@ func TestConfigureTracerProvider(t *testing.T) {
 		Err         error
 	}{
 		{
+			// nolint:goconst
 			Description: "Otlp/gRPC: Valid",
 			Config: Config{
+				// nolint:goconst
+				Provider: "otlp/grpc",
+				// nolint:goconst
+				Endpoint: "http://localhost",
+				// nolint:goconst
+				ParentBased: "ignore",
+				// nolint:goconst
+				NoParent: "never",
+			},
+		},
+		{
+			// nolint:goconst
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				// nolint:goconst
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+				// nolint:goconst
+				ParentBased: "honor",
+				// nolint:goconst
+				NoParent: "never",
+			},
+		},
+		{
+			// nolint:goconst
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				// nolint:goconst
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+				// nolint:goconst
+				ParentBased: "honor",
+				// nolint:goconst
+				NoParent: "always",
+			},
+		},
+		{
+			// nolint:goconst
+			Description: "Otlp/gRPC: Valid",
+			Config: Config{
+				// nolint:goconst
 				Provider:    "otlp/grpc",
 				Endpoint:    "http://localhost",
 				ParentBased: "ignore",
-				NoParent:    "never",
-			},
-		},
-		{
-			Description: "Otlp/gRPC: Valid",
-			Config: Config{
-				Provider:    "otlp/grpc",
-				Endpoint:    "http://localhost",
-				ParentBased: "honor",
-				NoParent:    "never",
-			},
-		},
-		{
-			Description: "Otlp/gRPC: Valid",
-			Config: Config{
-				Provider:    "otlp/grpc",
-				Endpoint:    "http://localhost",
-				ParentBased: "honor",
-				NoParent:    "always",
-			},
-		},
-		{
-			Description: "Otlp/gRPC: Valid",
-			Config: Config{
-				Provider:    "otlp/grpc",
-				Endpoint:    "http://localhost",
-				ParentBased: "ignore",
-				NoParent:    "always",
+				// nolint:goconst
+				NoParent: "always",
 			},
 		},
 		{
 			Description: "Otlp/gRPC: Missing Endpoint",
 			Config: Config{
+				// nolint:goconst
 				Provider:    "otlp/grpc",
 				ParentBased: "ignore",
-				NoParent:    "never",
+				// nolint:goconst
+				NoParent: "never",
 			},
 			Err: ErrTracerProviderBuildFailed,
 		},
@@ -74,14 +92,17 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Valid Missing NoParent Value",
 			Config: Config{
-				Provider:    "otlp/grpc",
-				Endpoint:    "http://localhost",
+				// nolint:goconst
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+				// nolint:goconst
 				ParentBased: "honor",
 			},
 		},
 		{
 			Description: "Invalid ParentBased Value",
 			Config: Config{
+				// nolint:goconst
 				Provider:    "otlp/grpc",
 				Endpoint:    "http://localhost",
 				ParentBased: "dishonor",
@@ -91,8 +112,10 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Invalid No Parent Value",
 			Config: Config{
-				Provider:    "otlp/grpc",
-				Endpoint:    "http://localhost",
+				// nolint:goconst
+				Provider: "otlp/grpc",
+				Endpoint: "http://localhost",
+				// nolint:goconst
 				ParentBased: "honor",
 				NoParent:    "sometimes",
 			},
@@ -101,6 +124,7 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Otlp/HTTP: Valid",
 			Config: Config{
+				// nolint:goconst
 				Provider: "otlp/http",
 				Endpoint: "http://localhost",
 			},
@@ -108,6 +132,7 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Otlp/HTTP: Missing Endpoint",
 			Config: Config{
+				// nolint:goconst
 				Provider: "otlp/http",
 			},
 			Err: ErrTracerProviderBuildFailed,
@@ -115,6 +140,7 @@ func TestConfigureTracerProvider(t *testing.T) {
 		{
 			Description: "Jaeger: Missing endpoint",
 			Config: Config{
+				// nolint:goconst
 				Provider: "jaeger",
 			},
 			Err: ErrTracerProviderBuildFailed,

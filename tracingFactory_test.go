@@ -36,6 +36,7 @@ func TestNew(t *testing.T) {
 			ShouldFail:   false,
 			ExpectIsNoop: false,
 			Config: Config{
+				// nolint:goconst
 				Provider: "stdout",
 			},
 		},
