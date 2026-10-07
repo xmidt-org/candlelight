@@ -4,14 +4,16 @@
 package candlelight
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"io"
 	"net/http"
 	"strings"
 
-	"github.com/xmidt-org/wrp-go/v3/wrpcontext"
-	"github.com/xmidt-org/wrp-go/v3/wrphttp"
+	"github.com/xmidt-org/wrp-go/v5"
+	"github.com/xmidt-org/wrphttp"
 
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
@@ -51,7 +53,8 @@ func (traceConfig *TraceConfig) TraceMiddleware(delegate http.Handler) http.Hand
 
 // EchoFirstNodeTraceInfo captures the trace information from a request, writes it
 // back in the response headers, and adds it to the request's context
-// It can also decode the request and save the resulting WRP object in the context if isDecodable is true
+// If isDecodable is true, it also decodes the request as a WRP message and uses the
+// message headers as the source of trace information.
 func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler) http.Handler {
 	return func(delegate http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -60,18 +63,15 @@ func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler
 			headerPrefix := tracing.headerPrefix
 			propagator := tracing.Propagator()
 
+			var traceHeaders []string
+			var decoded bool
 			if isDecodable {
-				if req, err := wrphttp.DecodeRequest(r, nil); err == nil {
-					r = req
-				}
+				traceHeaders, decoded = decodeWRPHeaders(r)
 			}
 
-			var traceHeaders []string
 			ctx = propagator.Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-			if msg, ok := wrpcontext.GetMessage(ctx); ok {
-				traceHeaders = msg.Headers
-			} else if headers := r.Header.Values(headerPrefix); len(headers) != 0 {
-				traceHeaders = headers
+			if !decoded {
+				traceHeaders = r.Header.Values(headerPrefix)
 			}
 
 			// Iterate through the trace headers (if any), format them, and add them to ctx
@@ -91,6 +91,36 @@ func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler
 			delegate.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// decodeWRPHeaders returns the headers of the WRP message carried by r, which is
+// either expressed as HTTP headers or encoded in the body as JSON or msgpack.
+// The request body is left intact for downstream handlers.
+func decodeWRPHeaders(r *http.Request) ([]string, bool) {
+	// wrphttp consumes the body, so decode from a copy and put the body back.
+	req := *r
+	req.Body = http.NoBody
+	if r.Body != nil {
+		contents, err := io.ReadAll(r.Body)
+		_ = r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewReader(contents))
+		if err != nil {
+			return nil, false
+		}
+		req.Body = io.NopCloser(bytes.NewReader(contents))
+	}
+
+	msgs, err := wrphttp.DecodeRequest(&req, wrp.NoStandardValidation())
+	if err != nil || len(msgs) == 0 {
+		return nil, false
+	}
+
+	var msg wrp.Message
+	if err := msgs[0].To(&msg, wrp.NoStandardValidation()); err != nil {
+		return nil, false
+	}
+
+	return msg.Headers, true
 }
 
 // GenTID generates a 16-byte long string
