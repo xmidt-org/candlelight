@@ -96,6 +96,12 @@ func EchoFirstTraceNodeInfo(tracing Tracing, isDecodable bool) func(http.Handler
 // decodeWRPHeaders returns the headers of the WRP message carried by r, which is
 // either expressed as HTTP headers or encoded in the body as JSON or msgpack.
 // The request body is left intact for downstream handlers.
+//
+// A request carrying several messages (multipart, JSONL or MsgpackL) reports
+// nothing: the request's span has one parent, and picking one message's trace
+// for it would be arbitrary.  The caller then uses the HTTP headers, which
+// describe the request itself.  Tracing each message is left to whatever
+// processes them.
 func decodeWRPHeaders(r *http.Request) ([]string, bool) {
 	// wrphttp consumes the body, so decode from a copy and put the body back.
 	req := *r
@@ -111,7 +117,7 @@ func decodeWRPHeaders(r *http.Request) ([]string, bool) {
 	}
 
 	msgs, err := wrphttp.DecodeRequest(&req, wrp.NoStandardValidation())
-	if err != nil || len(msgs) == 0 {
+	if err != nil || len(msgs) != 1 {
 		return nil, false
 	}
 

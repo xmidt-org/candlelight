@@ -109,6 +109,15 @@ func TestDecodeWRPHeaders(t *testing.T) {
 			expected:   []string{headerA},
 			expectedOK: true,
 		}, {
+			// Several messages can't share one request span, so the HTTP
+			// headers decide instead.
+			description: "several messages in one request",
+			header:      http.Header{contentType: {"application/jsonl"}},
+			body: bytes.Join([][]byte{
+				encodeWRP(t, wrp.JSON, headerA),
+				encodeWRP(t, wrp.JSON, "b: 2"),
+			}, []byte("\n")),
+		}, {
 			description: "unsupported content type",
 			header:      http.Header{contentType: {"text/plain"}},
 			body:        []byte("hello"),
@@ -176,6 +185,18 @@ func TestEchoFirstTraceNodeInfo(t *testing.T) {
 				testTraceHeader: {testTraceparent},
 			},
 			body:        []byte("hello"),
+			expectValid: true,
+		}, {
+			description: "trace from configured http header when the request carries several messages",
+			isDecodable: true,
+			header: http.Header{
+				contentType:     {"application/jsonl"},
+				testTraceHeader: {testTraceparent},
+			},
+			body: bytes.Join([][]byte{
+				encodeWRP(t, wrp.JSON, "traceparent: 00-00000000000000000000000000000001-0000000000000001-01"),
+				encodeWRP(t, wrp.JSON, "traceparent: 00-00000000000000000000000000000002-0000000000000002-01"),
+			}, []byte("\n")),
 			expectValid: true,
 		}, {
 			description: "wrp message is ignored when not decodable",
