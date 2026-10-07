@@ -141,32 +141,31 @@ func TestConfigureTracerProvider(t *testing.T) {
 			Err: ErrTracerProviderBuildFailed,
 		},
 		{
-			Description: "Jaeger: Missing endpoint",
+			Description: "Jaeger: removed",
 			Config: Config{
 				// nolint:goconst
 				Provider: "jaeger",
+				Endpoint: "http://localhost:14268/api/traces",
 			},
-			Err: ErrTracerProviderBuildFailed,
+			Err: ErrTracerProviderRemoved,
 		},
 		{
-			Description: "Zipkin: Missing endpoint",
+			Description: "Zipkin: removed, any case",
 			Config: Config{
 				Provider: "Zipkin",
+				Endpoint: "http://localhost:9411/api/v2/spans",
 			},
-			Err: ErrTracerProviderBuildFailed,
+			Err: ErrTracerProviderRemoved,
 		},
 		{
-			Description: "Jaeger: Valid",
+			Description: "Jaeger: a custom constructor of the same name still works",
 			Config: Config{
 				Provider: "jaeger",
-				Endpoint: "http://localhost",
-			},
-		},
-		{
-			Description: "Zipkin: Valid",
-			Config: Config{
-				Provider: "Zipkin",
-				Endpoint: "http://localhost",
+				Providers: map[string]ProviderConstructor{
+					"jaeger": func(_ Config, _ sdktrace.Sampler) (trace.TracerProvider, error) {
+						return noop.NewTracerProvider(), nil
+					},
+				},
 			},
 		},
 		{
@@ -287,4 +286,20 @@ func TestEnvironmentOnSpans(t *testing.T) {
 	name, ok := attrs.Value("service.name")
 	require.True(t, ok)
 	assert.Equal(t, testApp, name.AsString())
+}
+
+// The removal error tells the reader what to configure instead.
+func TestRemovedProviderErrors(t *testing.T) {
+	for name, want := range map[string]string{
+		"jaeger": `use "otlp/grpc"`,
+		"zipkin": `OpenTelemetry Collector`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := ConfigureTracerProvider(Config{Provider: name, Endpoint: "http://localhost"})
+			require.ErrorIs(t, err, ErrTracerProviderRemoved)
+			assert.Contains(t, err.Error(), name)
+			assert.Contains(t, err.Error(), want)
+			assert.NotErrorIs(t, err, ErrTracerProviderNotFound)
+		})
+	}
 }
