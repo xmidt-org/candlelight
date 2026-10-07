@@ -21,11 +21,16 @@ New builds a Tracing value from a Config:
 Tracing carries the TracerProvider and the W3C Trace Context propagator, which
 services hand to otelmux, otelhttp and their own instrumentation.
 
-The built-in providers are otlp/grpc, otlp/http, stdout and noop, along with
-the deprecated jaeger and zipkin exporters.  A provider name not in that list
-is looked up in Config.Providers, so a service can supply its own
-ProviderConstructor.  With no provider configured, tracing is a no-op;
-Tracing.IsNoop reports this.
+The built-in providers are otlp/grpc, otlp/http, stdout and noop.  A provider
+name not in that list is looked up in Config.Providers, so a service can
+supply its own ProviderConstructor.  With no provider configured, tracing is a
+no-op; Tracing.IsNoop reports this.
+
+The jaeger and zipkin providers were removed in v0.4.0, after OpenTelemetry
+dropped the Jaeger exporter and deprecated the Zipkin one.  A configuration
+that still names either fails with ErrTracerProviderRemoved, whose text says
+what to use instead: Jaeger accepts OTLP directly, and Zipkin is reached
+through an OpenTelemetry Collector or a Zipkin server that accepts OTLP.
 
 ParentBased and NoParent select the sampler.  The default, ParentBased "ignore",
 disables span creation.  ParentBased "honor" follows the parent span's decision,

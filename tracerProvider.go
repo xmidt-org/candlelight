@@ -11,11 +11,9 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/jaeger" // nolint:staticcheck
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	stdout "go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
-	"go.opentelemetry.io/otel/exporters/zipkin" // nolint:staticcheck
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.10.0"
@@ -28,7 +26,26 @@ var (
 	ErrTracerProviderBuildFailed = errors.New("failed building TracerProvider")
 	ErrInvalidParentBasedValue   = errors.New("invalid ParentBased value provided in configuration")
 	ErrInvalidNoParentValue      = errors.New("invalid No Parent value provided in configuration")
+
+	// ErrTracerProviderRemoved is returned when the configuration names a
+	// provider this package used to ship and no longer does.  The error text
+	// says what to use instead.
+	ErrTracerProviderRemoved = errors.New("tracerProvider was removed")
 )
+
+// removedProviders maps the names of providers that were removed to the
+// migration advice returned with ErrTracerProviderRemoved.  The names stay
+// here so a configuration that still uses one fails with an explanation
+// rather than as an unknown provider.  A constructor of the same name in
+// Config.Providers takes precedence.
+var removedProviders = map[string]string{
+	"jaeger": `the "jaeger" provider was removed in candlelight v0.4.0 because OpenTelemetry ` +
+		`dropped the Jaeger exporter; Jaeger accepts OTLP natively, so use "otlp/grpc" ` +
+		`with the collector's port 4317 or "otlp/http" with port 4318`,
+	"zipkin": `the "zipkin" provider was removed in candlelight v0.4.0 because OpenTelemetry ` +
+		`deprecated the Zipkin exporter; use "otlp/grpc" or "otlp/http" and send to an ` +
+		`OpenTelemetry Collector that exports to Zipkin, or to a Zipkin server that accepts OTLP`,
+}
 
 // DefaultTracerProvider is used when no provider is given.
 // The Noop tracer provider turns all tracing related operations into
@@ -36,10 +53,12 @@ var (
 const DefaultTracerProvider = "noop"
 
 // ConfigureTracerProvider creates the TracerProvider based on the configuration
-// provided. It has built-in support for jaeger, zipkin, stdout and noop providers.
-// A different provider can be used if a constructor for it is provided in the
-// config.
+// provided. It has built-in support for the otlp/grpc, otlp/http, stdout and
+// noop providers.  A different provider can be used if a constructor for it is
+// provided in the config.
 // If a provider name is not provided, a noop tracerProvider will be returned.
+// The jaeger and zipkin providers were removed in v0.4.0; naming one returns
+// ErrTracerProviderRemoved with migration advice.
 func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 	if len(config.Provider) == 0 {
 		config.Provider = DefaultTracerProvider
@@ -53,6 +72,9 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 		providerConfig = providersConfig[config.Provider]
 	}
 	if providerConfig == nil {
+		if why, removed := removedProviders[config.Provider]; removed {
+			return nil, fmt.Errorf("%w: %s", ErrTracerProviderRemoved, why)
+		}
 		return nil, fmt.Errorf("%w for provider %s", ErrTracerProviderNotFound, config.Provider)
 	}
 
@@ -159,43 +181,6 @@ var providersConfig = map[string]ProviderConstructor{
 			sdktrace.WithSampler(smplr),
 		), nil
 
-	},
-	// nolint:goconst
-	"jaeger": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
-		if cfg.Endpoint == "" {
-			return nil, ErrTracerProviderBuildFailed
-		}
-
-		exporter, err := jaeger.New(
-			jaeger.WithCollectorEndpoint(
-				jaeger.WithEndpoint(cfg.Endpoint)))
-		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
-		}
-
-		tp := sdktrace.NewTracerProvider(
-			sdktrace.WithBatcher(exporter),
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(newResource(cfg)),
-		)
-		return tp, nil
-	},
-	"zipkin": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
-		if cfg.Endpoint == "" {
-			return nil, ErrTracerProviderBuildFailed
-		}
-
-		exporter, err := zipkin.New(cfg.Endpoint)
-		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrTracerProviderBuildFailed, err)
-		}
-
-		tp := sdktrace.NewTracerProvider(
-			sdktrace.WithBatcher(exporter),
-			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(newResource(cfg)),
-		)
-		return tp, nil
 	},
 	// nolint:goconst
 	"stdout": func(cfg Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
