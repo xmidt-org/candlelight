@@ -4,10 +4,13 @@
 package candlelight
 
 import (
+	"context"
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel/attribute"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"go.opentelemetry.io/otel/trace/noop"
@@ -221,4 +224,67 @@ func TestConfigureTracerProvider(t *testing.T) {
 			assert.True(errors.Is(err, tc.Err))
 		})
 	}
+}
+
+const (
+	testApp      = "talaria"
+	testExporter = "otlp/http"
+)
+
+func TestNewResource(t *testing.T) {
+	tests := []struct {
+		description string
+		config      Config
+		expected    []attribute.KeyValue
+	}{
+		{
+			description: "with an environment",
+			config:      Config{ApplicationName: testApp, Provider: testExporter, Environment: "prod"},
+			expected: []attribute.KeyValue{
+				attribute.String("deployment.environment", "prod"),
+				attribute.String("exporter", testExporter),
+				attribute.String("service.name", testApp),
+			},
+		}, {
+			description: "without an environment",
+			config:      Config{ApplicationName: testApp, Provider: testExporter},
+			expected: []attribute.KeyValue{
+				attribute.String("exporter", testExporter),
+				attribute.String("service.name", testApp),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.description, func(t *testing.T) {
+			// Attributes come back sorted by key.
+			assert.Equal(t, tc.expected, newResource(tc.config).Attributes())
+		})
+	}
+}
+
+// The environment reaches the spans a configured provider produces.
+func TestEnvironmentOnSpans(t *testing.T) {
+	tp, err := ConfigureTracerProvider(Config{
+		ApplicationName: testApp,
+		Provider:        "stdout", // nolint:goconst
+		SkipTraceExport: true,
+		Environment:     "staging",
+		ParentBased:     "honor",
+		NoParent:        "always",
+	})
+	require.NoError(t, err)
+
+	_, span := tp.Tracer("test").Start(context.Background(), "op")
+	span.End()
+
+	ro, ok := span.(sdktrace.ReadOnlySpan)
+	require.True(t, ok)
+	attrs := ro.Resource().Set()
+	env, ok := attrs.Value("deployment.environment")
+	require.True(t, ok)
+	assert.Equal(t, "staging", env.AsString())
+	name, ok := attrs.Value("service.name")
+	require.True(t, ok)
+	assert.Equal(t, testApp, name.AsString())
 }

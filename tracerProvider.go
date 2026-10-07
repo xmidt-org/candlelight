@@ -101,6 +101,19 @@ func ConfigureTracerProvider(config Config) (trace.TracerProvider, error) {
 // TracerProvider.
 type ProviderConstructor func(config Config, sampler sdktrace.Sampler) (trace.TracerProvider, error)
 
+// newResource describes the service that spans come from: its name, the
+// deployment environment when one is configured, and the exporter in use.
+func newResource(cfg Config) *resource.Resource {
+	attrs := []attribute.KeyValue{
+		semconv.ServiceNameKey.String(cfg.ApplicationName),
+		attribute.String("exporter", cfg.Provider),
+	}
+	if cfg.Environment != "" {
+		attrs = append(attrs, semconv.DeploymentEnvironmentKey.String(cfg.Environment))
+	}
+	return resource.NewWithAttributes(semconv.SchemaURL, attrs...)
+}
+
 // Created pre-defined immutable map of built-in provider's
 var providersConfig = map[string]ProviderConstructor{
 	// nolint:goconst
@@ -120,12 +133,7 @@ var providersConfig = map[string]ProviderConstructor{
 
 		return sdktrace.NewTracerProvider(
 			sdktrace.WithBatcher(exporter),
-			sdktrace.WithResource(
-				resource.NewWithAttributes(
-					semconv.SchemaURL,
-					semconv.ServiceNameKey.String(cfg.ApplicationName),
-				),
-			),
+			sdktrace.WithResource(newResource(cfg)),
 			sdktrace.WithSampler(smplr),
 		), nil
 
@@ -147,12 +155,7 @@ var providersConfig = map[string]ProviderConstructor{
 
 		return sdktrace.NewTracerProvider(
 			sdktrace.WithBatcher(exporter),
-			sdktrace.WithResource(
-				resource.NewWithAttributes(
-					semconv.SchemaURL,
-					semconv.ServiceNameKey.String(cfg.ApplicationName),
-				),
-			),
+			sdktrace.WithResource(newResource(cfg)),
 			sdktrace.WithSampler(smplr),
 		), nil
 
@@ -173,12 +176,7 @@ var providersConfig = map[string]ProviderConstructor{
 		tp := sdktrace.NewTracerProvider(
 			sdktrace.WithBatcher(exporter),
 			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(
-				resource.NewWithAttributes(
-					semconv.SchemaURL,
-					semconv.ServiceNameKey.String(cfg.ApplicationName),
-					attribute.String("exporter", cfg.Provider),
-				)),
+			sdktrace.WithResource(newResource(cfg)),
 		)
 		return tp, nil
 	},
@@ -195,12 +193,7 @@ var providersConfig = map[string]ProviderConstructor{
 		tp := sdktrace.NewTracerProvider(
 			sdktrace.WithBatcher(exporter),
 			sdktrace.WithSampler(sdktrace.AlwaysSample()),
-			sdktrace.WithResource(
-				resource.NewWithAttributes(
-					semconv.SchemaURL,
-					semconv.ServiceNameKey.String(cfg.ApplicationName),
-					attribute.String("exporter", cfg.Provider),
-				)),
+			sdktrace.WithResource(newResource(cfg)),
 		)
 		return tp, nil
 	},
@@ -216,7 +209,10 @@ var providersConfig = map[string]ProviderConstructor{
 		if err != nil {
 			return nil, err
 		}
-		tp := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exporter))
+		tp := sdktrace.NewTracerProvider(
+			sdktrace.WithSyncer(exporter),
+			sdktrace.WithResource(newResource(cfg)),
+		)
 		return tp, nil
 	},
 	"noop": func(config Config, smplr sdktrace.Sampler) (trace.TracerProvider, error) {
