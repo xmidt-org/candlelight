@@ -12,6 +12,12 @@ type Config struct {
 	// ApplicationName is the name for this application.
 	ApplicationName string `json:"applicationName"`
 
+	// Environment names the deployment environment, such as "prod" or
+	// "staging".  It is exported with every span as the
+	// deployment.environment resource attribute, which tracing backends
+	// like Datadog use as the env to filter by.  Leave it empty to omit it.
+	Environment string `json:"environment"`
+
 	// Provider is the name of the trace provider to use.
 	Provider string `json:"provider"`
 
