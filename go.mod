@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/stretchr/testify v1.12.1
-	github.com/xmidt-org/wrp-go/v5 v5.4.6
+	github.com/xmidt-org/wrp-go/v5 v5.4.7
 	github.com/xmidt-org/wrphttp v0.4.0
 	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.47.0
